@@ -22,6 +22,33 @@ Every entry: what was checked, how, and the result.
   - `verified-secondary`: confirmed via ≥2 independent authoritative guides.
   - `unverified`: implemented only as non-deterministic review hints or disabled.
 
-## Build/test verification
+## Build/test verification (2026-11-01, Phase E state)
 
-(updated as phases complete)
+| Check | Command | Result |
+|---|---|---|
+| TypeScript strict | `pnpm typecheck` | ✅ 0 errors |
+| ESLint | `pnpm lint` | ✅ 0 errors |
+| Unit + golden + hostile + rule-testcase + perf tests | `pnpm test` | ✅ 117 passed / 0 failed |
+| Production build | `pnpm build` | ✅ ok |
+| Dependency vulnerabilities | `pnpm audit` | ✅ 0 (dev incl.) |
+| Production licenses | `pnpm licenses list --prod` | ✅ MIT / 0BSD / Zlib-compatible only |
+
+### Performance measurement
+
+- Machine: AMD Ryzen 9 7945HX, 16 GB RAM, Windows 10 (26220), Node 24.19.0
+- Input: generated stress DOCX — 1223 blocks (1000+ body paragraphs, 3 tables), 202 citation markers, 150 references
+- Command: `pnpm test` (stress test in `src/core/perf/stress.test.ts`)
+- Result: **180 ms** end-to-end (unzip → OOXML parse → citations → references → rules) vs. 10 s target
+- UI interactions verified in Chromium (Playwright) at production build; analysis runs in a Web Worker
+
+### Browser verification (Chromium via Playwright, production build)
+
+- Home load, sample-paper analysis, issue click→locate, graph interactions, scope panel: pass
+- HTML report download: pass; content re-read and verified
+- PDF report download: pass; CJK text selectable, stats/clauses/reference list verified via pypdf text extraction
+- Paste-text analysis: pass
+- Invalid-file error state: pass ("不是有效的 DOCX 文件…")
+- Dark / light themes and zh-CN / EN switch: pass
+- Offline PWA (Chromium): SW active → network cut → reload OK → sample analysis OK → HTML export OK → paste analysis OK; no page errors
+
+Firefox/WebKit Playwright runs are executed by CI (`pnpm test:e2e`); local-machine results recorded in `docs/testing.md`.

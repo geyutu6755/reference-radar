@@ -9,23 +9,14 @@
     />
     <meta name="theme-color" content="#0e5fd8" />
     <title>Reference Radar · 引文雷达</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <script>
-      // Apply theme before first paint to avoid flash
-      (function () {
-        try {
-          var t = localStorage.getItem("rr-theme");
-          if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-          if (t === "dark") document.documentElement.dataset.theme = "dark";
-          var lang = localStorage.getItem("rr-lang");
-          if (lang === "en") document.documentElement.lang = "en";
-        } catch (e) {
-          /* ignore */
-        }
-      })();
-    </script>
+    <script src="./theme-init.js"></script>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-180.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+    />
   </head>
   <body>
     <div id="root"></div>

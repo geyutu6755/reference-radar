@@ -103,6 +103,8 @@ export const messages = {
     "common.cancel": "取消",
     "common.close": "关闭",
     "common.loading": "加载中…",
+    "pwa.updateReady": "新版本已就绪，点击刷新",
+    "pwa.installHint": "可安装为离线应用：浏览器菜单 → 安装应用",
   },
   en: {
     "app.name": "Reference Radar",
@@ -202,6 +204,8 @@ export const messages = {
     "common.cancel": "Cancel",
     "common.close": "Close",
     "common.loading": "Loading…",
+    "pwa.updateReady": "A new version is ready — click to refresh",
+    "pwa.installHint": "Installable as an offline app: browser menu → Install app",
   },
 } as const;
 

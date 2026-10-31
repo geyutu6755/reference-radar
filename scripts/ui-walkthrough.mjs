@@ -9,7 +9,7 @@ const logs = [];
 page.on("pageerror", (e) => logs.push(`[pageerror] ${e.message}`));
 
 // 1. home
-await page.goto("http://localhost:5199/");
+await page.goto("http://localhost:5200/");
 await page.waitForLoadState("domcontentloaded");
 await page.waitForTimeout(400);
 await page.screenshot({ path: `${OUT}/01-home.png`, fullPage: true });

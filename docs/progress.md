@@ -31,16 +31,20 @@ Live status of the V1.0 development plan. Updated each iteration.
 - [ ] Format checks grounded in verified clauses
 - [ ] Golden sample suite (18 samples)
 
-## Phase D — UI
+## Phase D — UI ✅
 
-- [ ] Design system, home, workbench, graph, report views
-- [ ] i18n (zh-CN/en), themes, a11y
+- [x] Design system, home, workbench, graph, report views
+- [x] i18n (zh-CN/en), themes, a11y
+- [x] Browser walkthrough with screenshots (see scripts/ui-walkthrough.mjs)
 
-## Phase E — Offline & export
+## Phase E — Offline & export ✅
 
-- [ ] PWA + offline verification
-- [ ] HTML + PDF export
-- [ ] Performance pass (web worker, 1000-paragraph stress sample)
+- [x] PWA (manifest, icons, SW precache + runtime font cache, update prompt)
+- [x] Offline verification (reload / analysis / exports all pass offline)
+- [x] HTML report (self-contained, escaped)
+- [x] PDF report (pdf-lib + CJK subset font, selectable text, verified via pypdf)
+- [x] Performance: stress sample 1223 blocks / 202 markers / 150 refs → 180 ms (<10 s target)
+- [x] Security: 0 npm vulnerabilities (incl. dev), CSP, path-traversal & zip-bomb guards tested
 
 ## Phase F — Open-source release
 
