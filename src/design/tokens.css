@@ -1,26 +1,73 @@
 :root {
   color-scheme: light dark;
-  /* Palette — light theme (dark overrides in theme.css later phases) */
-  --rr-bg: #f7f8fb;
+  /* Palette — light theme; [data-theme="dark"] overrides below */
+  --rr-bg: #f6f7fa;
+  --rr-bg-inset: #eef0f5;
   --rr-surface: #ffffff;
-  --rr-text: #17203a;
-  --rr-text-muted: #5a6579;
-  --rr-border: #e3e7ef;
+  --rr-surface-2: #fafbfd;
+  --rr-text: #182135;
+  --rr-text-muted: #5b6577;
+  --rr-border: #e2e6ee;
+  --rr-border-strong: #c9d1e0;
   --rr-primary: #0e5fd8;
   --rr-primary-strong: #0a4cae;
-  --rr-accent: #7c3aed;
-  --rr-danger: #d64545;
-  --rr-warn: #b97324;
-  --rr-ok: #1a7f4b;
+  --rr-primary-soft: #e8f0fd;
+  --rr-accent: #6d3fd4;
+  --rr-danger: #c93a3a;
+  --rr-danger-soft: #fdeeee;
+  --rr-warn: #a3660f;
+  --rr-warn-soft: #fdf3e4;
+  --rr-ok: #177a48;
+  --rr-ok-soft: #e8f6ee;
+  --rr-info-soft: #eef3fb;
+  --rr-review: #8a5bd0;
+  --rr-review-soft: #f3edfd;
+  --rr-edge: #7d92b8;
 
   --rr-radius-s: 6px;
   --rr-radius-m: 10px;
   --rr-radius-l: 16px;
-  --rr-shadow-1: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 3px rgb(16 24 40 / 0.1);
-  --rr-shadow-2: 0 8px 24px rgb(16 24 40 / 0.12);
+  --rr-shadow-1: 0 1px 2px rgb(18 26 43 / 0.05), 0 1px 3px rgb(18 26 43 / 0.08);
+  --rr-shadow-2: 0 10px 30px rgb(18 26 43 / 0.12);
 
   --rr-font-sans:
     system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB",
     "Microsoft YaHei", "Noto Sans SC", sans-serif;
   --rr-font-mono: ui-monospace, SFMono-Regular, Consolas, "Courier New", monospace;
+
+  --rr-space-1: 4px;
+  --rr-space-2: 8px;
+  --rr-space-3: 12px;
+  --rr-space-4: 16px;
+  --rr-space-5: 24px;
+  --rr-space-6: 32px;
+  --rr-space-7: 48px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --rr-bg: #10131b;
+  --rr-bg-inset: #171b26;
+  --rr-surface: #191e2b;
+  --rr-surface-2: #1f2534;
+  --rr-text: #e7eaf2;
+  --rr-text-muted: #99a2b5;
+  --rr-border: #2a3142;
+  --rr-border-strong: #3b445a;
+  --rr-primary: #5b93ec;
+  --rr-primary-strong: #7ba6f0;
+  --rr-primary-soft: #1c2942;
+  --rr-accent: #a88ae8;
+  --rr-danger: #e5726f;
+  --rr-danger-soft: #3a2226;
+  --rr-warn: #d9a15b;
+  --rr-warn-soft: #382c1c;
+  --rr-ok: #5fbd8a;
+  --rr-ok-soft: #1d3128;
+  --rr-info-soft: #1c2739;
+  --rr-review: #b395e8;
+  --rr-review-soft: #2c2440;
+  --rr-edge: #55688f;
+  --rr-shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --rr-shadow-2: 0 10px 30px rgb(0 0 0 / 0.5);
 }
