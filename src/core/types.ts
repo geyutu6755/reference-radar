@@ -80,6 +80,21 @@ export interface DocBlock {
   /** Rendered Word auto-numbering prefix, e.g. "3.1" or "（1）". */
   numberingText?: string;
   notes: ParseNote[];
+  /** Run spans for fine-grained display (superscript/hidden/revised). */
+  spans?: Array<{
+    start: number;
+    end: number;
+    flags: {
+      hidden?: boolean;
+      deleted?: boolean;
+      fieldResult?: boolean;
+      fieldInstr?: boolean;
+      hyperlink?: boolean;
+      formula?: boolean;
+      inserted?: boolean;
+      superscript?: boolean;
+    };
+  }>;
 }
 
 /** One logical number segment inside a citation, as displayed. */
@@ -222,6 +237,7 @@ export interface RuleTestCase {
 export interface RuleTestInput {
   citations?: Partial<Citation>[];
   references?: Partial<ReferenceEntry>[];
+  relations?: Partial<Relation>[];
   options?: Record<string, unknown>;
 }
 
