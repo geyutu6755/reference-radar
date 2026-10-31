@@ -73,17 +73,32 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Hashed build assets: cache-first.
-  if (/\/assets\//.test(url.pathname) || url.pathname.endsWith(".woff2") || url.pathname.endsWith(".svg")) {
-    event.respondWith(
-      (async () => {
-        const cache = await caches.open(PRECACHE);
-        const hit = await cache.match(req);
-        if (hit) return hit;
-        const res = await fetch(req);
-        if (res.ok) await cache.put(req, res.clone());
-        return res;
-      })()
-    );
+  // Static app assets (hashed chunks, icons, misc root files): cache-first
+  // with a failsafe fallback chain so offline never rejects.
+  if (/\/assets\//.test(url.pathname) || /\.(woff2|svg|png|css|js)$/.test(url.pathname)) {
+    event.respondWith(serveStatic(req));
+    return;
   }
+  // Any other same-origin GET (e.g. theme-init.js, manifest): precache-first.
+  event.respondWith(serveStatic(req));
 });
+
+async function serveStatic(req) {
+  try {
+    const cache = await caches.open(PRECACHE);
+    const hit = await cache.match(req, { ignoreVary: true, ignoreSearch: false });
+    if (hit) return hit;
+    const res = await fetch(req);
+    if (res && res.ok) await cache.put(req, res.clone());
+    return res;
+  } catch (e) {
+    try {
+      const cache = await caches.open(PRECACHE);
+      const hit = await cache.match(req, { ignoreVary: true });
+      if (hit) return hit;
+    } catch (e2) {
+      /* fall through */
+    }
+    return new Response("offline", { status: 503, headers: { "content-type": "text/plain" } });
+  }
+}

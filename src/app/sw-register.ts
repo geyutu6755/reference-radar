@@ -1,6 +1,9 @@
 /**
  * Service worker registration with update notification.
- * The update prompt fires when a new waiting worker takes control.
+ *
+ * Reload policy: the page is ONLY reloaded when the user accepts an update
+ * (SKIP_WAITING → controllerchange). First-install claims must never reload —
+ * that would wipe in-memory analysis state.
  */
 import type { MessageKey } from "../i18n";
 
@@ -26,6 +29,7 @@ export function registerServiceWorker(onUpdate: (u: SwUpdate) => void): void {
               onUpdate({
                 key: "pwa.updateReady",
                 apply: async () => {
+                  updateAccepted = true;
                   next.postMessage({ type: "SKIP_WAITING" });
                 },
               });
@@ -38,8 +42,9 @@ export function registerServiceWorker(onUpdate: (u: SwUpdate) => void): void {
       });
 
     let refreshing = false;
+    let updateAccepted = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (!refreshing) {
+      if (updateAccepted && !refreshing) {
         refreshing = true;
         location.reload();
       }

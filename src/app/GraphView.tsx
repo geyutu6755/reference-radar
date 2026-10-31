@@ -130,8 +130,7 @@ export default function GraphView({ result, onLocateCitation, onLocateReference 
         <div className="rr-graph__canvas">
           <svg
             viewBox={`0 0 ${WIDTH} ${height}`}
-            width={WIDTH}
-            height={height}
+            style={{ width: "100%", height: "auto", display: "block", minHeight: 180 }}
             role="img"
             aria-label={tr("graph.title")}
           >
@@ -203,8 +202,8 @@ export default function GraphView({ result, onLocateCitation, onLocateReference 
                     fill={missing ? "var(--rr-danger-soft)" : c.detection.needsReview ? "var(--rr-review-soft)" : "var(--rr-primary-soft)"}
                     stroke={missing ? "var(--rr-danger)" : "transparent"}
                   />
-                  <text x={COL_L_X + 8} y={leftY(i) + 17} fontSize="11.5" fill="var(--rr-text)">
-                    {c.raw.length > 11 ? c.raw.slice(0, 10) + "…" : c.raw}
+                  <text x={COL_L_X + 8} y={leftY(i) + 17} fontSize="10.5" fill="var(--rr-text)">
+                    {c.raw.length > 8 ? c.raw.slice(0, 7) + "…" : c.raw}
                   </text>
                 </g>
               );
@@ -213,7 +212,8 @@ export default function GraphView({ result, onLocateCitation, onLocateReference 
             {references.map((r, i) => {
               const dim = dimNode("ref", r.id);
               const hasIssue = (refIssueCounts.get(r.id) ?? 0) > 0;
-              const label = `[${r.index}] ${(r.fields.title ?? r.raw).slice(0, 18)}`;
+              const t = r.fields.title ?? r.raw;
+              const label = `[${r.index}] ${t.slice(0, 6)}${t.length > 6 ? "…" : ""}`;
               return (
                 <g
                   key={r.id}
@@ -235,7 +235,7 @@ export default function GraphView({ result, onLocateCitation, onLocateReference 
                     fill={hasIssue ? "var(--rr-warn-soft)" : "var(--rr-bg-inset)"}
                     stroke={hasIssue ? "var(--rr-warn)" : "transparent"}
                   />
-                  <text x={COL_R_X + 8} y={rightY(i) + 17} fontSize="11.5" fill="var(--rr-text)">
+                  <text x={COL_R_X + 8} y={rightY(i) + 17} fontSize="10.5" fill="var(--rr-text)">
                     {label}
                   </text>
                 </g>
