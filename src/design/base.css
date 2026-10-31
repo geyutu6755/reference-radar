@@ -1,0 +1,24 @@
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: var(--rr-font-sans);
+  background: var(--rr-bg);
+  color: var(--rr-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+:focus-visible {
+  outline: 2px solid var(--rr-primary);
+  outline-offset: 2px;
+}

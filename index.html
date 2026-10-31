@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Reference Radar 引文雷达 — 免费、开源、本地优先的学术论文引文与参考文献核查工具，支持 GB/T 7714—2015 / 2025。"
+    />
+    <meta name="theme-color" content="#0e5fd8" />
+    <title>Reference Radar · 引文雷达</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      // Apply theme before first paint to avoid flash
+      (function () {
+        try {
+          var t = localStorage.getItem("rr-theme");
+          if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          if (t === "dark") document.documentElement.dataset.theme = "dark";
+          var lang = localStorage.getItem("rr-lang");
+          if (lang === "en") document.documentElement.lang = "en";
+        } catch (e) {
+          /* ignore */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Reference Radar 需要启用 JavaScript 才能运行。/ JavaScript is required.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
