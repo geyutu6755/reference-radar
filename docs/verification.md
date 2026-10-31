@@ -91,3 +91,14 @@ not the app.
   HTML export, PDF export, real DOCX upload, SW+manifest+HTTPS — all ✅, no page errors
 - Release: https://github.com/geyutu6755/reference-radar/releases/tag/v1.0.0 with
   sample-paper.docx and example-html-report.html attachments
+
+
+## Lighthouse (2026-11-01, live site)
+
+Measured with lighthouse 12 (headless Chrome) against
+https://geyutu6755.github.io/reference-radar/:
+
+- Performance: **98**
+- Accessibility: **98**
+- Best Practices: **100**
+- SEO: **100**
