@@ -88,7 +88,7 @@ export function extractCitations(blocks: DocBlock[]): ExtractResult {
       const charStart = m.index;
       const charEnd = m.index + raw.length;
       const parsed = parseCitationContent(content, charStart + raw.indexOf(content));
-      if (parsed.numbers.length === 0) continue;
+      if (parsed.numbers.length === 0 && parsed.segments.length === 0) continue;
 
       const signals: string[] = [];
       let confidence: Confidence = "medium";
@@ -157,6 +157,12 @@ export function extractCitations(blocks: DocBlock[]): ExtractResult {
       }
       if (parsed.invalid) {
         signals.push("content-parse-issue");
+        needsReview = true;
+      }
+      if (parsed.numbers.some((n) => n === 0)) {
+        // GB/T 7714 sequential numbering starts at 1 — a 0 suggests this is
+        // not a citation (e.g. an interval or data label).
+        signals.push("zero-number");
         needsReview = true;
       }
       if (block.notes.some((n) => n.code === "hidden-text")) signals.push("block-has-hidden-text");

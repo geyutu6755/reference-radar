@@ -89,6 +89,7 @@ export const RULES: RuleDefinition[] = [
       const known = new Set(ctx.references.map((r) => r.index));
       const drafts: IssueDraft[] = [];
       for (const c of ctx.citations) {
+        if (c.detection.needsReview) continue; // uncertain markers never produce deterministic errors
         const missing = [...new Set(c.numbers.filter((n) => !known.has(n)))];
         if (missing.length === 0) continue;
         drafts.push({

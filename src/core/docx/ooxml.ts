@@ -14,7 +14,7 @@
  *   (Zotero/Mendeley/EndNote); displayed result runs are used as text.
  * - Math (m:oMath) is replaced by a single "□" placeholder and noted.
  */
-import { XMLParser } from "fast-xml-parser";
+import { XMLParser, XMLValidator } from "fast-xml-parser";
 
 /* ------------------------------------------------------------------ */
 /* preserveOrder tree helpers                                          */
@@ -36,8 +36,13 @@ const ORDER_PARSER = new XMLParser({
   ignorePiTags: true,
 });
 
-/** Parse XML into an ordered tree; returns the root entry. */
+/** Parse XML into an ordered tree; returns the root entry. Throws on invalid XML. */
 export function parseXmlOrdered(xml: string): OEntry | undefined {
+  const check = XMLValidator.validate(xml, { allowBooleanAttributes: true });
+  if (check !== true) {
+    const where = check.err ? ` (line ${check.err.line}, col ${check.err.col})` : "";
+    throw new Error(`XML 结构无效${where} / Invalid XML structure${where}`);
+  }
   const tree = ORDER_PARSER.parse(xml) as OEntry[];
   return tree[0];
 }

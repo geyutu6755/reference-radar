@@ -106,6 +106,9 @@ export function applyReferenceRegion(blocks: DocBlock[], section: ReferenceSecti
   for (let i = section.startIndex; i <= section.endIndex && i < blocks.length; i++) {
     const b = blocks[i]!;
     if (b.kind === "heading" && i === section.startIndex) continue; // keep title as heading
+    // Only body paragraphs form the reference list; table cells / notes keep
+    // their own region so citations inside them remain analyzable.
+    if (b.containerKind !== "body") continue;
     b.region = "references";
   }
 }
