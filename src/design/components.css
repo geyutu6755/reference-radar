@@ -124,10 +124,25 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--rr-space-4) var(--rr-space-6);
+  flex-wrap: wrap;
+  gap: var(--rr-space-2) var(--rr-space-3);
+  padding: var(--rr-space-4) var(--rr-space-5);
   max-width: 1120px;
   width: 100%;
   margin: 0 auto;
+}
+.rr-brand {
+  white-space: nowrap;
+}
+.rr-brand__sub {
+  color: var(--rr-text-muted);
+  font-weight: 400;
+  font-size: 13px;
+}
+@media (max-width: 640px) {
+  .rr-brand__sub {
+    display: none;
+  }
 }
 .rr-brand {
   display: flex;

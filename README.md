@@ -82,6 +82,24 @@ DOCX bytes → safe unzip (fflate + bomb/path guards)
 - PDF export embeds a subset of Noto Sans CJK SC (SIL OFL) so Chinese text stays selectable
 - Hand-written service worker with a build-generated precache manifest
 
+## Roadmap
+
+Planned versions — nothing on this list is shipped yet; see
+[`docs/limitations.md`](docs/limitations.md) for the current boundaries.
+
+- **v1.1 — author–year system (著者-出版年制).** Citation-marker recognition for
+  `(Crane, 1972)`-style in-text citations, name–date reference-list parsing and
+  the corresponding rule set, versioned per standard edition like the numeric
+  rules today.
+- **v1.2 — wider document coverage.** Header/footer and text-box analysis,
+  footnote-based reference-list (页下注文献表) consistency checks, and richer
+  Zotero/Mendeley/EndNote field metadata parsing (beyond displayed text).
+- **v1.3 — deeper entry-format rules.** Field-completeness checks for the nine
+  entry types newly formalized in GB/T 7714—2025 (会议录/学位论文/报告/标准/
+  网站网页/档案/地图/数据集/预印本), grounded in verified clause tables.
+- **Later.** Standalone npm publication of the parser and rule engine; a
+  rule-coverage expansion driven by verifiable sources.
+
 ## Contributing
 
 Issues and pull requests are welcome — see [`CONTRIBUTING.md`](CONTRIBUTING.md). Rule additions must cite a source clause and include test cases; the meta-test runner executes every rule's declared cases.

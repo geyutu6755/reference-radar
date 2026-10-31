@@ -44,6 +44,16 @@ fails the whole suite.
   analysis → HTML export → paste analysis, all pass with zero page errors
 - `pnpm audit`: 0 vulnerabilities (dev included); production license check MIT/0BSD/Zlib-compatible
 
+## Responsive layout verification
+
+Playwright screenshots at tablet (768×1024) and mobile (390×844) viewports
+(`scripts/responsive-shots.mjs`, production build): home, workbench and graph
+views captured to `docs/screenshots/responsive-*.png`. One defect found and
+fixed during the check (brand name wrapped vertically at 390px — nav now wraps
+and the English subtitle hides below 640px). Verified after fix: single-column
+feature cards on mobile, wrapped workbench toolbar, tabbed panels instead of a
+squeezed three-column layout, graph scales to container width.
+
 ## Manual test scripts
 
 `scripts/` contains the verification scripts used during development:

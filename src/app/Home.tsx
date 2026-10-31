@@ -55,7 +55,7 @@ export default function Home({ onResult }: HomeProps): React.ReactNode {
         <a className="rr-brand" href="./" onClick={(e) => e.preventDefault()}>
           <RadarLogo className="rr-brand__logo" />
           <span>{tr("app.name")}</span>
-          <span style={{ color: "var(--rr-text-muted)", fontWeight: 400, fontSize: 13 }}>Reference Radar</span>
+          <span className="rr-brand__sub">Reference Radar</span>
         </a>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <select
@@ -190,6 +190,10 @@ export default function Home({ onResult }: HomeProps): React.ReactNode {
           <div>
             <h3>{tr("home.privacyTitle")}</h3>
             <p>{tr("home.privacyBody")}</p>
+            <p style={{ margin: "8px 0 0" }}>
+              <span className="rr-badge rr-badge--primary" style={{ verticalAlign: "middle" }}>PWA</span>{" "}
+              {tr("pwa.installHint")}
+            </p>
           </div>
         </section>
       </main>
