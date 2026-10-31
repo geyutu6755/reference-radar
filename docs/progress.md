@@ -46,12 +46,17 @@ Live status of the V1.0 development plan. Updated each iteration.
 - [x] Performance: stress sample 1223 blocks / 202 markers / 150 refs → 180 ms (<10 s target)
 - [x] Security: 0 npm vulnerabilities (incl. dev), CSP, path-traversal & zip-bomb guards tested
 
-## Phase F — Open-source release
+## Phase F — Open-source release ✅
 
-- [ ] Docs, CI, screenshots
-- [ ] GitHub repo + Pages deploy + Release
+- [x] README (en/zh) with real screenshots, LICENSE, CONTRIBUTING, CoC, SECURITY, CHANGELOG
+- [x] docs/testing.md, docs/privacy.md, docs/limitations.md, rule-coverage kept live
+- [x] GitHub Actions CI (green) + Pages deploy (green)
+- [x] Public repo: github.com/geyutu6755/reference-radar
+- [x] Pages live: geyutu6755.github.io/reference-radar (functionally verified)
+- [x] Release v1.0.0 with assets
 
-## Phase G — Acceptance
+## Phase G — Acceptance ✅
 
-- [ ] Fresh-sample end-to-end walkthrough
-- [ ] Final quality gate
+- [x] Fresh-sample live walkthrough (upload → analyze → findings vs. hand annotation →
+      locate → graph → version switch → exports) — all steps passed, zero page errors
+- [x] Final quality gate: tsc strict / eslint / 117 tests / build / E2E ×3 browsers all green

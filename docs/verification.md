@@ -52,3 +52,42 @@ Every entry: what was checked, how, and the result.
 - Offline PWA (Chromium): SW active → network cut → reload OK → sample analysis OK → HTML export OK → paste analysis OK; no page errors
 
 Firefox/WebKit Playwright runs are executed by CI (`pnpm test:e2e`); local-machine results recorded in `docs/testing.md`.
+
+
+## Phase G acceptance (2026-11-01)
+
+A fresh document ("县域电商发展与农户增收关系研究" — never used in development or
+golden samples) was walked through the **live demo site** as a new user:
+upload → standard 2025 → analyze → inspect findings → locate source → graph →
+2015 re-analysis → HTML + PDF export.
+
+Hand-annotated expectations (written before running) vs. live result:
+
+| Expected (hand-derived) | Live result |
+|---|---|
+| RR-CIT-004 order violation ×1 | ✅ ×1 |
+| RR-CIT-001 missing refs ≥2 ([6],[7]) | ✅ ×3 ([6] cited twice + [7]) |
+| RR-REF-002 duplicate number ×1 | ✅ ×1 |
+| RR-REF-003 numbering gaps ×1 (5→8) | ✅ ×1 |
+| RR-REF-011 uncited entries ≥1 | ✅ ×2 ([8] and [4] — the annotation initially missed [4]; the engine was right) |
+| 8 citation markers | ✅ 9 (footnote marker [6] included — correct) |
+| 7 reference entries | ✅ 7 |
+| issue basis cites clause 9.2.1.1 | ✅ |
+| graph nodes + click focus | ✅ 16 nodes |
+| HTML + PDF exports from live site | ✅ both; PDF verified via pypdf (all findings, clauses, ref list present; 2 pages, selectable CJK) |
+| page errors | ✅ none |
+
+Note: the first acceptance run failed because the acceptance SCRIPT itself
+embedded a stray `<w:footnotes>` element inside `<w:body>`; the app correctly
+rejected the invalid XML with a precise error message. The script was fixed,
+not the app.
+
+## GitHub release verification (2026-11-01)
+
+- Repo: https://github.com/geyutu6755/reference-radar (public)
+- CI run on `fe12675`: **success** (typecheck, lint, unit, build, audit, E2E ×3 browsers)
+- Pages deploy on `fe12675`: **success** → https://geyutu6755.github.io/reference-radar/
+- Live-site functional pass (Chromium): home, sample analysis, graph (20 nodes),
+  HTML export, PDF export, real DOCX upload, SW+manifest+HTTPS — all ✅, no page errors
+- Release: https://github.com/geyutu6755/reference-radar/releases/tag/v1.0.0 with
+  sample-paper.docx and example-html-report.html attachments
