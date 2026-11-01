@@ -60,3 +60,16 @@ Live status of the V1.0 development plan. Updated each iteration.
 - [x] Fresh-sample live walkthrough (upload → analyze → findings vs. hand annotation →
       locate → graph → version switch → exports) — all steps passed, zero page errors
 - [x] Final quality gate: tsc strict / eslint / 117 tests / build / E2E ×3 browsers all green
+
+
+## V1.0.1 — independent quality acceptance & adoption readiness ✅ (2026-11-01)
+
+- [x] External corpus (20 docs, independent generator, hand annotations):
+      marker precision/recall 1.000, 0 FP/0 FN on all severities
+- [x] Defects fixed: near-dup threshold 0.9→0.85 (regression-tested); PDF busy state
+- [x] Rules 12→14: RR-FMT-011 (page hyphen, 6.2), RR-FMT-013 (/OL cited date, 7.6)
+- [x] Independent live test incl. offline DOCX import + offline PDF export;
+      PWA update flow verified end-to-end
+- [x] Adoption: user guide (zh/en), feedback plan, usage template, Discussions,
+      topics refresh, zh SEO metadata, README links
+- [x] v1.0.1 released; v1.0.0 tag untouched; release commit = deployed commit

@@ -31,7 +31,10 @@ fails the whole suite.
 ## Recorded results (2026-11-01, v1.0.0)
 
 - Machine: AMD Ryzen 9 7945HX, 16 GB RAM, Windows 10 (build 26220), Node 24.19.0
-- `pnpm test`: **117 passed / 0 failed / 0 skipped**
+- `pnpm test` (v1.0.0 record): 117 passed — superseded by the v1.0.1 count below
+- `pnpm test` (v1.0.1): **143 passed / 0 failed** — adds the external corpus gate
+  (20 hand-annotated documents, see `docs/external-validation.md`) and the two
+  new rules' test cases
 - Performance stress sample (1223 blocks, 202 citation markers, 150 references):
   **180 ms** end-to-end (target < 10 s)
 - E2E (`pnpm exec playwright test`): **10 passed, 0 failed, 2 skipped** across

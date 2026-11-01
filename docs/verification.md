@@ -102,3 +102,45 @@ https://geyutu6755.github.io/reference-radar/:
 - Accessibility: **98**
 - Best Practices: **100**
 - SEO: **100**
+
+
+## V1.0.1 verification (2026-11-01)
+
+### External corpus (independent of the app's test builder)
+
+- 20 synthetic documents (`corpus/files/`) built by `corpus/build.mjs` (separate
+  OOXML emitters, real-Word anatomy) + hand annotations written before running
+  (`corpus/annotations/`); runner `src/core/corpus/corpus.test.ts`.
+- Result over 21 sample-version runs: marker recall **1.000**, marker
+  precision **1.000**; deterministic errors TP=6/FP=0/FN=0; warnings TP=2/FP=0/FN=0;
+  infos TP=4/FP=0/FN=0. Full table and coverage limits: `docs/external-validation.md`.
+- Defects surfaced & fixed: corpus-builder body-join bug (app degraded
+  correctly); near-duplicate similarity threshold 0.9→0.85 (regression-tested).
+
+### New rules from verified clause text
+
+- RR-FMT-011 (page-range hyphen, clause 6.2), RR-FMT-013 (online /OL entries
+  need cited date, clauses 7.6/8.11) — clause text re-read from the verified
+  transcription of the official 2025 standard; rule count 12→14.
+
+### Independent live-product test (fresh browser profile, production site)
+
+- First visit → corpus DOCX upload (C01) → findings → graph (10 nodes) → HTML
+  export → PDF export → offline reload → **offline DOCX import (C02, findings
+  matched hand annotation)** → **offline PDF export (content verified via
+  pypdf: title, RR-CIT-004, RR-CIT-001, RR-REF-011, clause 9.2.1.1)** — all
+  pass, zero page errors (`scripts/v101-live-test.mjs`).
+- **PWA update flow** tested end-to-end locally: old SW (rr-v1.0.0) installed →
+  new sw.js deployed → update banner appeared → user applies → caches migrate
+  to rr-v1.0.1-precache. The same version bump is deployed to production, so
+  existing installs will receive the banner.
+- Cross-browser: Playwright E2E suite covers Chromium/Firefox/WebKit (10
+  passed). Recorded browser differences: the offline-emulation and download
+  suites run on Chromium; Firefox/WebKit cover the full core path (upload,
+  analysis, basis, graph, i18n/theme). No Firefox/WebKit-specific failures.
+
+### Release consistency
+
+- v1.0.1 Release target = `7cbd6ad` = deployed Pages build (CI + Deploy both
+  success on that commit); live `sw.js` serves `rr-v1.0.1` and the page
+  carries the new SEO metadata. v1.0.0 tag and release untouched.
