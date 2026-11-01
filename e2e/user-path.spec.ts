@@ -87,12 +87,21 @@ test.describe("extended flow (downloads)", () => {
     await page.getByRole("button", { name: "theme" }).click();
     await expect(page.locator("html[data-theme='dark']")).toHaveCount(0);
 
-    // HTML report download
+    // HTML report download + content must carry the actual findings
     const [html] = await Promise.all([
       page.waitForEvent("download", { timeout: 15_000 }),
       page.getByRole("button", { name: "导出 HTML 报告" }).click(),
     ]);
     expect(html.suggestedFilename()).toMatch(/\.html$/);
+    const htmlPath = await html.path();
+    if (htmlPath) {
+      const { readFileSync } = await import("node:fs");
+      const content = readFileSync(htmlPath, "utf-8");
+      expect(content).toContain("GB/T 7714—2025");
+      // the sample analysis in this spec contains at least one finding;
+      // the report must mirror whatever the engine produced (ruleId format)
+      expect(content).toMatch(/RR-(CIT|REF|FMT|SCOPE)-\d{3}/);
+    }
 
     // PDF report download (lazy CJK font fetch)
     test.setTimeout(120_000);
@@ -137,6 +146,29 @@ test.describe("extended flow (downloads)", () => {
     await page.waitForSelector(".rr-wb", { timeout: 20_000 });
     await expect(page.locator(".rr-wb__stats")).toContainText("文献条目");
     await expect(page.locator(".rr-issue", { hasText: "RR-CIT-001" }).first()).toBeVisible();
+  });
+});
+
+test.describe("negative: analysis worker unavailable", () => {
+  test("app fails loudly with an error alert (no silent fake success)", async ({ page }) => {
+    await page.route("**/analysis-worker*", (route) => route.abort());
+    await page.goto("/");
+    await page.setInputFiles('input[type="file"]', {
+      name: "x.docx",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      buffer: Buffer.from(sampleBytes()),
+    });
+    // Either an explicit error alert, or the main-thread fallback produced a
+    // real workbench. A silent empty "success" is the failure mode this guards.
+    const sawAlert = await page
+      .waitForSelector(".rr-alert--error", { timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!sawAlert) {
+      await page.waitForSelector(".rr-wb", { timeout: 10_000 });
+      const stats = await page.locator(".rr-wb__stats").textContent();
+      expect(stats).toContain("文献条目");
+    }
   });
 });
 
