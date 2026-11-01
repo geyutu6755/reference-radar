@@ -23,3 +23,12 @@ static assets appear. The CSP (`default-src 'self'`) additionally blocks any
 third-party origin.
 
 Contact / disclosure: see [SECURITY.md](../SECURITY.md).
+
+## Public beta submissions
+
+Users who report issues are asked to submit **desanitized fragments only**
+(reference-list excerpts, offending paragraphs) — never full papers. Fragments
+posted in a public issue are treated as test material licensed for regression
+use; whole test files shared privately stay local to the maintainers' machines
+and are never committed or redistributed. The application itself continues to
+upload nothing (see sections above).

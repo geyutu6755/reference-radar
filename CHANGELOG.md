@@ -4,6 +4,45 @@ All notable changes are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [1.0.2] — 2026-11-01
+
+Real-usage validation & test-reliability release. **No application-code
+changes** — the deployed site is identical to the v1.0.1 app build (service
+worker version intentionally unchanged to avoid a pointless re-download);
+the release ships hardened tests, an independent real-document study and the
+public-beta infrastructure. v1.0.0/v1.0.1 tags untouched.
+
+### Added
+
+- **Strengthened independent live test** (`scripts/live-test.mjs`): page
+  errors now fail the run; the clean sample asserts exact zero-issue stats;
+  the error sample asserts exact ruleIds, detail text, clause basis, locate
+  flash and graph missing-relation data — online AND offline; HTML/PDF export
+  contents verified (ruleIds, %PDF magic); a negative canary proves the
+  assertion harness throws on wrong expectations. Supersedes the
+  false-positive-prone v1.0.1 live script.
+- **Negative E2E trial**: analysis-worker sabotage — the app must fail loudly
+  with an error alert (or produce a real main-thread analysis), never a silent
+  fake success. HTML report download now content-checked in E2E.
+- **Real-document compatibility study** (`docs/real-docx-validation.md`): two
+  real university thesis templates (北航 2026-2027, 人大) plus the GB/T
+  7714—2025 standard DOCX, hand-annotated. Measured on real documents:
+  marker precision/recall **1.000**, zero deterministic false positives,
+  compressed/full-width punctuation, 增刊, 析出文献, PP/DS codes, empty
+  template slots and broken URLs all handled per annotation. Sample count and
+  acquisition limits recorded honestly (3 real documents; most thesis DOCX
+  circulate via non-programmatic channels).
+- **Public-beta trial tasks** for 本科生/研究生/编辑 (5-minute checklists),
+  desanitized-submission rules, privacy statement extension (`docs/feedback.md`).
+- **V1.1 priority research** (`docs/v1.1-research.md`): demand evidence,
+  feasibility, standard basis and competitor landscape; recommends P0
+  journal-entry and e-resource format checks over author–year expansion.
+
+### Verified
+
+- Full gates: tsc strict, eslint, 147 tests, production build, Playwright E2E
+  13 passed (Chromium/Firefox/WebKit), 0-vulnerability audit.
+
 ## [1.0.1] — 2026-11-01
 
 Quality-acceptance and adoption-readiness release. No tag was moved; v1.0.0 remains available.
