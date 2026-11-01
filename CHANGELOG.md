@@ -4,6 +4,48 @@ All notable changes are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [1.1.0] — 2026-11-01
+
+Professional entry-format checking: the tool now helps writers find and FIX
+common bibliographic problems, not just numbering consistency. Rule count
+14 → 19, after a full per-type 必备性 audit against the official standard scan.
+
+### Fixed (audit)
+
+- **RR-FMT-013 rewritten**: cited-date applicability narrowed to 网站网页
+  (表10), 数据集 (表14) and 预印本 (表15). The v1.0.1 rule falsely warned on
+  journal/thesis/report/patent/standard /OL entries — the standard's own
+  [J/OL] examples carry no cited date. Real-template annotations corrected.
+
+### Added (rules, all grounded in the verified per-type tables)
+
+- **RR-FMT-014**: 网站网页/预印本/数据集 entries require a URL.
+- **RR-FMT-015**: [D] entries missing the degree-granting institution (必备)
+  → review when parse confidence allows.
+- **RR-FMT-016**: [J] entries without a publication year → review; article
+  numbers (示例6) and online-first dates (示例7) are explicitly legitimate.
+- **RR-FMT-017**: cited date not in YYYY-MM-DD format → warning **with a
+  mechanical fix preview**.
+- **RR-FMT-018**: [S] entries without a standard number → warning; the
+  compressed "GB/T20090.16—2016" form is handled (caught by real templates).
+
+### Added (product)
+
+- **预览修改 / 复制建议**: issues with an unambiguous mechanical fix show a
+  before/after preview and a one-click "copy corrected entry" — no missing
+  information is ever invented; original DOCX is never modified.
+- **Issue grouping** for long papers (grouped by rule with collapsible counts
+  above 12 findings), verified on the 1402-block standard document.
+- Real-derived redistributable regression fixtures (北航/人大 template entry
+  lists) now run in CI; the local real-document study reports skipped files
+  explicitly instead of silently passing.
+
+### Verified
+
+- 185 tests (incl. per-rule positive/negative/legal-exception cases and the
+  real-derived fixtures), Playwright E2E, 0-vulnerability audit, long-document
+  UX screenshots.
+
 ## [1.0.2] — 2026-11-01
 
 Real-usage validation & test-reliability release. **No application-code

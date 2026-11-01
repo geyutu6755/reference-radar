@@ -29,13 +29,42 @@ status and test status. **Partial coverage is not full-standard compliance.**
 | RR-FMT-008 | Type/carrier codes exist in the version's table | Annex A | Annex B | 2025 official / 2015 secondary | warning |
 | RR-FMT-010 | Missing type identifier → manual review | 6.2 / 7.3 | 7.2 / 8 | same | review |
 | RR-FMT-011 | Page ranges must use hyphen "-" (v1.0.1) | 6.2 | 7.2 | same | warning |
-| RR-FMT-013 | Online (/OL) entries require cited date [YYYY-MM-DD] (v1.0.1) | 7.6 / 8.11 | 8.4.4 | same | warning |
+| RR-FMT-013 | Cited date required — **v1.1 audit: only for 网站网页(表10)/数据集(表14)/预印本(表15)**; 2015: EB warning + other /OL review (8.4.4) | 8.11.2 表10 / 8.14 表14 / 8.15 表15 | 8.4.4 | same | warning / review |
+| RR-FMT-014 | EB/PP/DS entries require URL (v1.1) | 8.11.2 表10 / 8.15 表15 | — | official | warning |
+| RR-FMT-015 | [D] missing degree-granting institution → review (v1.1) | 8.7.1 表6 | 4.5 | same | review |
+| RR-FMT-016 | [J] without publication year → review; article number / online-first are legitimate (v1.1) | 8.5.1 / 8.5.2 表4 | 8.8 | same | review |
+| RR-FMT-017 | Cited date not YYYY-MM-DD → warning with mechanical fix preview (v1.1) | 7.6 | 8.4.4 | same | warning |
+| RR-FMT-018 | [S] without standard number → warning (v1.1); compressed "GB/T20090.16" form handled | 8.9.1 表8 | 4.4 | same | warning |
 | RR-REF-011 | Uncited entries (info only, not a violation) | 9.2.2 | 10.1.2 | same | info |
 | RR-SCOPE-012 | No reference list found | 9.2 | 10.1 | same | warning |
 | RR-SCOPE-013 | Ambiguous bracketed markers → review queue | 9.2.1.2 | 10.1.1 | same | review |
 
-**Rule count: 14** (12 structural/format families in v1.0.0 + RR-FMT-011 and
-RR-FMT-013 added in v1.0.1 from the verified clause text of chapter 6.2 and 7.6).
+**Rule count: 19** (v1.0.2: 14; v1.1.0 adds RR-FMT-014/015/016/017/018 and
+rewrites RR-FMT-013 after the per-type 必备性 audit).
+
+## V1.1 rule-correctness audit (2026-11-01)
+
+Every 著录项目 table of GB/T 7714—2025 was read directly in the official scan
+(pages 8–23 of the standard). Consequences applied in v1.1.0:
+
+1. **引用日期 (cited date) is 必备 ONLY for 网站网页 (表10), 数据集 (表14) and
+   预印本 (表15).** The 期刊析出 (表4), 图书 (表1), 学位论文 (表6), 报告 (表7),
+   专利 (表9) and 标准 (表8) tables contain no cited-date element. RR-FMT-013
+   was narrowed accordingly — the v1.0.1 behavior produced false positives on
+   J/R/P/S/D-OL entries. The standard's own [J/OL] examples (8.5.3 示例4/6/9/10)
+   carry no cited date.
+2. **"有则必备" items cannot be judged deterministically** from entry text
+   alone (出版地/出版者/出版年/年卷期/页码/版本 across types). Missing-item
+   checks for those are either omitted (e.g. journal page numbers — article
+   numbers and online-first dates are legitimate per 8.5.1.1 示例6/7) or
+   emitted at **review** severity (e.g. journal year absent entirely).
+3. **Deterministic (warning) checks exist only for 必备 items that are
+   reliably detectable:** cited date (EB/DS/PP), URL (EB/PP), standard number
+   ([S]), plus structural citation/list rules of clause 9.2. [D] institution
+   and ambiguous shapes degrade to review.
+4. 2015 edition: the unified electronic-resource cited-date requirement
+   (8.4.4, verified-secondary) applies, but non-EB findings are downgraded to
+   review to avoid false certainty.
 
 ## Version-specific code tables
 

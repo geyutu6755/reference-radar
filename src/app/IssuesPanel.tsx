@@ -53,7 +53,7 @@ const SEVERITIES: Array<Severity | "all"> = ["all", "error", "warning", "review"
 
 export default function IssuesPanel(props: IssuesPanelProps): React.ReactNode {
   const { result, filter, setFilter, activeIssueId, onIssueClick } = props;
-  const { tr, locale } = useApp();
+  const { tr } = useApp();
 
   const counts: Record<string, number> = {
     all: result.issues.length,
@@ -63,6 +63,52 @@ export default function IssuesPanel(props: IssuesPanelProps): React.ReactNode {
     info: result.stats.infoCount,
   };
   const visible = filter === "all" ? result.issues : result.issues.filter((i) => i.severity === filter);
+
+  // Long papers can produce dozens of findings; group by rule when it helps.
+  const grouped = visible.length > 12;
+  const groups = grouped
+    ? [...new Set(visible.map((i) => i.ruleId))].map((rid) => ({ ruleId: rid, items: visible.filter((i) => i.ruleId === rid) }))
+    : [];
+
+  const issueCard = (issue: Issue) => (
+    <div
+      key={issue.id}
+      className={`rr-issue${activeIssueId === issue.id ? " rr-issue--active" : ""}`}
+      onClick={() => onIssueClick(issue)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onIssueClick(issue);
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={issue.detail}
+    >
+      <div className="rr-issue__head">
+        <span className={`rr-badge rr-badge--${issue.severity}`}>{tr(`workbench.filter.${issue.severity}`)}</span>
+        {grouped ? null : <span className="rr-issue__rule">{issue.ruleId}</span>}
+        {issue.requiresManualCheck && (
+          <span className="rr-badge rr-badge--review" title={tr("workbench.manualCheck")}>
+            ✋
+          </span>
+        )}
+      </div>
+      <p className="rr-issue__detail">{issue.detail}</p>
+      {issue.anchors[0]?.text && <div className="rr-issue__quote">“{issue.anchors[0].text}”</div>}
+      {issue.suggestion && (
+        <div style={{ fontSize: 12.5, marginBottom: 6 }}>
+          <b style={{ color: "var(--rr-ok)" }}>{tr("workbench.suggestion")}：</b>
+          {issue.suggestion}
+        </div>
+      )}
+      {issue.fixPreview && <FixPreview issue={issue} />}
+      <div className="rr-issue__basis">
+        <span>
+          <b>{tr("workbench.ruleBasis")}</b> · GB/T 7714—{issue.standardVersion === "2025" ? "2025" : "2015"} 第{" "}
+          {issue.source.clause} 条
+        </span>
+        <span style={{ opacity: 0.8 }}>{issue.source.summary}</span>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: 0, flex: 1 }}>
@@ -82,60 +128,18 @@ export default function IssuesPanel(props: IssuesPanelProps): React.ReactNode {
       <div style={{ overflowY: "auto", minHeight: 0 }}>
         {visible.length === 0 ? (
           <div className="rr-empty">{tr("workbench.noIssues")}</div>
-        ) : (
-          visible.map((issue) => (
-            <div
-              key={issue.id}
-              className={`rr-issue${activeIssueId === issue.id ? " rr-issue--active" : ""}`}
-              onClick={() => onIssueClick(issue)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") onIssueClick(issue);
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label={issue.detail}
-            >
-              <div className="rr-issue__head">
-                <span className={`rr-badge rr-badge--${issue.severity}`}>
-                  {tr(`workbench.filter.${issue.severity}`)}
-                </span>
-                <span className="rr-issue__rule">{issue.ruleId}</span>
-                {issue.requiresManualCheck && (
-                  <span className="rr-badge rr-badge--review" title={tr("workbench.manualCheck")}>
-                    ✋
-                  </span>
-                )}
-              </div>
-              <p className="rr-issue__detail">{issue.detail}</p>
-              {issue.anchors[0]?.text && <div className="rr-issue__quote">“{issue.anchors[0].text}”</div>}
-              {issue.suggestion && (
-                <div style={{ fontSize: 12.5, marginBottom: 6 }}>
-                  <b style={{ color: "var(--rr-ok)" }}>{tr("workbench.suggestion")}：</b>
-                  {issue.suggestion}
-                </div>
-              )}
-              {issue.fixPreview && <FixPreview issue={issue} />}
-              <div className="rr-issue__basis">
-                <span>
-                  <b>{tr("workbench.ruleBasis")}</b> · GB/T 7714—{issue.standardVersion === "2025" ? "2025" : "2015"} 第{" "}
-                  {issue.source.clause} 条
-                  {issue.source.priorClause && issue.standardVersion === "2015" ? `（对应 2015 版 ${issue.source.priorClause}）` : ""}
-                </span>
-                <span style={{ opacity: 0.8 }}>
-                  {issue.source.summary}
-                </span>
-                <span style={{ opacity: 0.7 }}>
-                  {locale === "zh-CN"
-                    ? issue.source.status === "verified-official"
-                      ? "依据状态：已在官方标准文本中核验"
-                      : "依据状态：已通过多个权威二手来源核验"
-                    : issue.source.status === "verified-official"
-                      ? "Verified against the official standard text"
-                      : "Verified via multiple authoritative secondary sources"}
-                </span>
-              </div>
-            </div>
+        ) : grouped ? (
+          groups.map((g) => (
+            <details key={g.ruleId} className="rr-group" open>
+              <summary className="rr-group__summary">
+                <span className="rr-issue__rule">{g.ruleId}</span>
+                <span className="rr-group__count">{g.items.length}</span>
+              </summary>
+              {g.items.map(issueCard)}
+            </details>
           ))
+        ) : (
+          visible.map(issueCard)
         )}
       </div>
     </div>

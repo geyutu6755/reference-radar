@@ -41,7 +41,12 @@ The [demo site](https://geyutu6755.github.io/reference-radar/) is a full PWA: in
 
 Rules are versioned per standard edition and every rule carries a source clause plus a verification status (read the matrix in [`docs/rule-coverage.md`](docs/rule-coverage.md)):
 
-- **GB/T 7714—2025** (current, effective 2026-07-01) — 12 rules implemented; new-in-2025 type codes (`DS`, `PP`, `MM`) accepted.
+- **GB/T 7714—2025** (current, effective 2026-07-01) — **19 rules** (v1.1):
+  citation↔list consistency, numbering, duplicates, type codes per edition,
+  and entry-format checks grounded in the per-type 必备性 tables (cited date
+  for 网页/数据集/预印本, URL, standard numbers, thesis institutions), with
+  **mechanical fix previews** (before/after + one-click copy) for unambiguous
+  normalizations like page separators and date formats — nothing is invented.
 - **GB/T 7714—2015** (superseded) — same structural rules with 2015 clause numbering; 2025-only codes are flagged as undefined in this edition.
 - **Independent validation:** an external 20-document corpus (separate
   generator, hand annotations) measures marker precision/recall and issue

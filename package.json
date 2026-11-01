@@ -1,7 +1,7 @@
 {
   "name": "reference-radar",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Free, open-source, local-first citation & reference checker for academic papers (GB/T 7714—2015/2025)",
   "type": "module",
   "license": "MIT",
