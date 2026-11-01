@@ -251,6 +251,51 @@ describe("RR-FMT-008 / 010 / 016 (real DOCX bytes)", () => {
   });
 });
 
+describe("fix preview safety (real DOCX bytes)", () => {
+  /** Same computation the panel performs when copying. */
+  const apply = (text: string, find: string, replace: string): string => text.split(find).join(replace);
+
+  it("offers a preview whose result is the whole corrected entry", () => {
+    const entry = "张三. 某文[J]. 学报, 2020, 1(2): 24～33.";
+    const r = analyzeEntries([entry]);
+    const issue = of(r, "RR-FMT-011")[0]!;
+    expect(issue.fixPreview).toBeDefined();
+    const corrected = apply(issue.anchors[0]!.text, issue.fixPreview!.find, issue.fixPreview!.replace);
+    expect(corrected).toBe("[1] 张三. 某文[J]. 学报, 2020, 1(2): 24-33.");
+    expect(corrected).toContain("张三"); // nothing outside the span is touched
+  });
+
+  it("refuses to guess when the same malformed value appears twice", () => {
+    const r = analyzeEntries(["某作者. 网页[EB/OL]. [2025.1.15][2025.1.15]. https://example.org/a."]);
+    const issues = of(r, "RR-FMT-017");
+    expect(issues.length).toBe(1);
+    expect(issues[0]!.fixPreview).toBeUndefined();
+    expect(issues[0]!.fixBlocked).toContain("2 次");
+  });
+
+  it("states a reason instead of staying silent when no fix is offered", () => {
+    for (const ruleId of ["RR-FMT-011", "RR-FMT-017"]) {
+      const r = analyzeEntries(
+        ruleId === "RR-FMT-011"
+          ? ["张三. 某文[J]. 学报, 2020, 1(2): 24～33.", "李四. 某文[J]. 学报, 2020, 1(2): 24～33."]
+          : ["某作者. 网页[EB/OL]. [2025-13-45]. https://example.org/a."]
+      );
+      const issues = of(r, ruleId);
+      for (const issue of issues) {
+        // Either an actionable preview, or an explicit refusal — never neither.
+        expect(Boolean(issue.fixPreview) !== Boolean(issue.fixBlocked)).toBe(true);
+      }
+    }
+  });
+
+  it("never rewrites anything but the policed span", () => {
+    const r = analyzeEntries(["某作者. 网页[EB/OL]. [2025年1月15日]. https://example.org/a. DOI:10.1234/abcd"]);
+    const issue = of(r, "RR-FMT-017")[0]!;
+    const corrected = apply(issue.anchors[0]!.text, issue.fixPreview!.find, issue.fixPreview!.replace);
+    expect(corrected).toBe("[1] 某作者. 网页[EB/OL]. [2025-01-15]. https://example.org/a. DOI:10.1234/abcd");
+  });
+});
+
 describe("no regression in structural checks after field/rule changes", () => {
   it("still reports missing numbers, gaps and order violations", () => {
     const doc: TestDoc = {

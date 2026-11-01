@@ -249,6 +249,12 @@ export interface Issue {
     replace: string;
     description: string;
   };
+  /**
+   * Why no mechanical fix is offered (ambiguous span, or the correct value is
+   * not derivable). Present instead of `fixPreview`, never alongside it, so a
+   * finding is never silent about the fix it deliberately refuses to guess.
+   */
+  fixBlocked?: string;
 }
 
 export interface RuleTestCase {

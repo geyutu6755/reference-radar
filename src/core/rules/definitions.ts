@@ -104,14 +104,25 @@ function previewFrom(
   return { find, replace, description };
 }
 
-/** Cited-date preview: replaces the printed value only when it is resolvable. */
-function citedDateFixPreview(
+/**
+ * Either a safe mechanical fix, or an explicit statement of why none is
+ * offered: a finding must never be silent about a fix it refused to guess.
+ */
+function mechanicalFix(
   anchorText: string,
-  printed: string
-): Issue["fixPreview"] | undefined {
-  const iso = normalizeCitedDate(printed);
-  if (!iso) return undefined; // present but undeterminable → no mechanical fix
-  return previewFrom(anchorText, printed, iso, `将引用日期 ${printed} 规范化为 ${iso}`);
+  find: string,
+  replace: string,
+  description: string
+): { fixPreview?: Issue["fixPreview"]; fixBlocked?: string } {
+  const preview = previewFrom(anchorText, find, replace, description);
+  if (preview) return { fixPreview: preview };
+  const occurrences = find.length > 0 ? anchorText.split(find).length - 1 : 0;
+  return {
+    fixBlocked:
+      occurrences > 1
+        ? `原文中“${find}”出现 ${occurrences} 次，无法确定应修改哪一处，请手动修改。`
+        : `未能在原文条目中定位“${find}”，请手动修改。`,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -733,7 +744,7 @@ export const RULES: RuleDefinition[] = [
           messageParams: { index: r.index, pages },
           detail: `参考文献 [${r.index}] 页码“${pages}”未使用短横线“-”连接起讫页码。`,
           suggestion: "按著录用符号规定，将页码连接符改为半角短横线，如 24-33。",
-          fixPreview: previewFrom(
+          ...mechanicalFix(
             r.anchor.text,
             pages,
             normalized,
@@ -1149,10 +1160,11 @@ export const RULES: RuleDefinition[] = [
         // testing it could never reveal a format problem (V1.1.1).
         const printed = r.fields.citedDateRaw;
         if (printed === undefined) continue;
-        const resolvable = normalizeCitedDate(printed) !== undefined;
+        const iso = normalizeCitedDate(printed);
         // Well-shaped AND resolvable is the only clean state: “2025-13-45” has
         // the ISO shape but no such date, which is neither valid nor absent.
-        if (ISO_CITED_DATE.test(printed) && resolvable) continue;
+        if (ISO_CITED_DATE.test(printed) && iso !== undefined) continue;
+        const resolvable = iso !== undefined;
         drafts.push({
           ruleId: "RR-FMT-017",
           category: "entry-format",
@@ -1174,7 +1186,9 @@ export const RULES: RuleDefinition[] = [
           confidence: "high",
           requiresManualCheck: !resolvable,
           relatedIds: [r.id],
-          fixPreview: citedDateFixPreview(r.anchor.text, printed),
+          ...(iso !== undefined
+            ? mechanicalFix(r.anchor.text, printed, iso, `将引用日期 ${printed} 规范化为 ${iso}`)
+            : { fixBlocked: `引用日期“${printed}”不是有效日期，无法确定正确值，请手动核对。` }),
         });
       }
       return drafts;

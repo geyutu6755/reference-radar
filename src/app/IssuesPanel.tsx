@@ -8,7 +8,12 @@ function FixPreview({ issue }: { issue: Issue }): React.ReactNode {
   const [copied, setCopied] = useState(false);
   const fp = issue.fixPreview!;
   const anchorText = issue.anchors[0]?.text ?? "";
-  const corrected = anchorText.replace(fp.find, fp.replace);
+
+  // split/join keeps the replacement literal — String.replace would expand
+  // `$&`, `$1` and `` $` `` inside document-derived text. The rule only emits a
+  // preview for a span occurring exactly once, so this string is exactly what
+  // the panel displays: preview and clipboard cannot drift.
+  const corrected = anchorText.split(fp.find).join(fp.replace);
 
   const copy = async (): Promise<void> => {
     try {
@@ -31,12 +36,30 @@ function FixPreview({ issue }: { issue: Issue }): React.ReactNode {
         <span className="rr-fixpreview__label">{tr("fix.after")}</span>
         <code className="rr-fixpreview__after">{fp.replace}</code>
       </div>
+      <div className="rr-fixpreview__row">
+        <span className="rr-fixpreview__label">{tr("fix.fullEntry")}</span>
+        <code className="rr-fixpreview__full" data-testid="fix-full-entry">
+          {corrected}
+        </code>
+      </div>
       <div className="rr-fixpreview__actions">
         <button type="button" className="rr-btn rr-btn--sm" onClick={() => void copy()} disabled={copied}>
           {copied ? tr("fix.copied") : tr("fix.copy")}
         </button>
         <span className="rr-fixpreview__note">{tr("fix.noFabrication")}</span>
       </div>
+    </div>
+  );
+}
+
+/** A finding that refuses to guess: the reason shows instead of a copy button. */
+function FixBlocked({ issue }: { issue: Issue }): React.ReactNode {
+  const { tr } = useApp();
+  return (
+    <div className="rr-fixpreview" data-testid="fix-unavailable">
+      <div className="rr-fixpreview__title">{tr("fix.previewTitle")}</div>
+      <div className="rr-fixpreview__note">{tr("fix.unavailable")}</div>
+      <div className="rr-fixpreview__note">{issue.fixBlocked}</div>
     </div>
   );
 }
@@ -99,7 +122,11 @@ export default function IssuesPanel(props: IssuesPanelProps): React.ReactNode {
           {issue.suggestion}
         </div>
       )}
-      {issue.fixPreview && <FixPreview issue={issue} />}
+      {issue.fixPreview ? (
+        <FixPreview issue={issue} />
+      ) : issue.fixBlocked ? (
+        <FixBlocked issue={issue} />
+      ) : null}
       <div className="rr-issue__basis">
         <span>
           <b>{tr("workbench.ruleBasis")}</b> · GB/T 7714—{issue.standardVersion === "2025" ? "2025" : "2015"} 第{" "}
