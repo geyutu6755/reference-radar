@@ -64,6 +64,27 @@ function levenshtein(a: string, b: string): number {
   return prev[b.length]!;
 }
 
+
+/**
+ * Build a no-fabrication fix preview for a non-ISO cited date: rewrite only
+ * the date token inside the raw entry (zero-pad to YYYY-MM-DD). Returns
+ * undefined when the date cannot be located mechanically.
+ */
+function citedDateFixPreview(raw: string, date: string): { find: string; replace: string; description: string } | undefined {
+  const idx = raw.indexOf(date);
+  if (idx < 0) return undefined;
+  const m = /^(\d{4})[./年-](\d{1,2})[./月-](\d{1,2})日?$/.exec(date);
+  if (!m) return undefined;
+  const iso = `${m[1]}-${m[2]!.padStart(2, "0")}-${m[3]!.padStart(2, "0")}`;
+  const start = Math.max(0, idx - 1);
+  const end = Math.min(raw.length, idx + date.length + 1);
+  return {
+    find: raw.slice(start, end),
+    replace: raw.slice(start, idx) + iso + raw.slice(idx + date.length, end),
+    description: `将引用日期 ${date} 规范化为 ${iso}`,
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /* Rules                                                               */
 /* ------------------------------------------------------------------ */
@@ -585,6 +606,7 @@ export const RULES: RuleDefinition[] = [
     testCases: [
       {
         name: "DS code rejected under 2015",
+        version: "2015",
         input: {
           references: [
             { id: "r1", index: 1, raw: "某数据集[DS/OL]. 平台, 2024.", fields: { typeCode: "DS", typeIdentifier: "[DS/OL]", carrierCode: "OL" } },
@@ -678,6 +700,11 @@ export const RULES: RuleDefinition[] = [
             messageParams: { index: r.index, pages },
             detail: `参考文献 [${r.index}] 页码“${pages}”未使用短横线“-”连接起讫页码。`,
             suggestion: "按著录用符号规定，将页码连接符改为半角短横线，如 24-33。",
+            fixPreview: {
+              find: pages,
+              replace: pages.replace(/[-–—～~]/, "-"),
+              description: `将页码连接符规范化为短横线（${pages} → ${pages.replace(/[-–—～~]/, "-")}）`,
+            },
             anchors: [r.anchor],
             source: {
               clause: clauseFor(ctx.version, "6.2", "7.2"),
@@ -720,44 +747,75 @@ export const RULES: RuleDefinition[] = [
     category: "entry-format",
     severity: "warning",
     source: {
-      clause: "7.6 / 8.11",
+      clause: "8.11.2 表10 / 8.14 表14 / 8.15 表15",
       priorClause: "8.4.4",
       summary:
-        "电子资源的创建/发布或修改日期、引用日期应按 YYYY-MM-DD 格式著录；联机文献的引用日期为必备著录项目。",
+        "引用日期为必备著录项目的类型：网站网页（表10）、数据集（表14）、预印本（表15）。其他类型的著录项目表不含引用日期项（如期刊析出表4、报告表7、专利表9、标准表8、学位论文表6），其联机形式按各自表格无引用日期要求。",
       status: OFFICIAL_2025,
     },
     explanation:
-      "带联机网络载体（/OL）的条目应著录引用日期 [YYYY-MM-DD]。缺少引用日期是电子资源著录最常见的缺项之一。",
-    suggestedFix: "为该条目补充引用日期，如 [2025-01-15]。",
+      "引用日期的必备性因文献类型而异（v1.1 审计修正）：网站网页、数据集、预印本缺引用日期按警告处理；期刊、图书、学位论文、报告、专利、标准等类型的联机条目不检查引用日期（标准自身示例亦无）。2015 版将引用日期作为电子资源统一要求，故其他 /OL 类型在 2015 下降为待复核。",
+    suggestedFix: "为条目补充引用日期 [YYYY-MM-DD]。",
     check: (ctx) => {
       const drafts: IssueDraft[] = [];
       for (const r of ctx.references) {
-        if (r.fields.carrierCode !== "OL") continue;
         if (r.fields.citedDate) continue;
-        drafts.push({
-          ruleId: "RR-FMT-013",
-          category: "entry-format",
-          severity: "warning",
-          messageKey: "issue.missingCitedDate",
-          messageParams: { index: r.index },
-          detail: `参考文献 [${r.index}] 为联机文献（/OL），未见引用日期 [YYYY-MM-DD]。`,
-          suggestion: "补充引用日期，如 [2025-01-15]。",
-          anchors: [r.anchor],
-          source: {
-            clause: clauseFor(ctx.version, "7.6 / 8.11", "8.4.4"),
-            summary: "联机文献应著录引用日期，按 YYYY-MM-DD 格式。",
-            status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
-          },
-          confidence: "high",
-          requiresManualCheck: false,
-          relatedIds: [r.id],
-        });
+        const code = r.fields.typeCode ?? "";
+        // 2025: 引用日期必备 = EB(表10) + DS(表14) + PP(表15)
+        if (ctx.version === "2025") {
+          if (!["EB", "DS", "PP"].includes(code)) continue;
+          drafts.push({
+            ruleId: "RR-FMT-013",
+            category: "entry-format",
+            severity: "warning",
+            messageKey: "issue.missingCitedDate",
+            messageParams: { index: r.index },
+            detail: `参考文献 [${r.index}] 为${
+              code === "EB" ? "网站、网页" : code === "DS" ? "数据集" : "预印本"
+            }类文献，引用日期为必备著录项目，但未见 [YYYY-MM-DD] 形式的引用日期。`,
+            suggestion: "补充引用日期，如 [2025-01-15]。",
+            anchors: [r.anchor],
+            source: {
+              clause: "8.11.2 表10 / 8.14 表14 / 8.15 表15",
+              summary: "网站网页、数据集、预印本的引用日期为必备项。",
+              status: OFFICIAL_2025,
+            },
+            confidence: "high",
+            requiresManualCheck: false,
+            relatedIds: [r.id],
+          });
+        } else {
+          // 2015: 电子资源统一要求引用日期（8.4.4，verified-secondary）；
+          // EB 按警告，其余 /OL 类型按待复核以避免确定性误报。
+          if (r.fields.carrierCode !== "OL") continue;
+          const isEB = code === "EB";
+          drafts.push({
+            ruleId: "RR-FMT-013",
+            category: "entry-format",
+            severity: isEB ? "warning" : "review",
+            messageKey: "issue.missingCitedDate",
+            messageParams: { index: r.index },
+            detail: isEB
+              ? `参考文献 [${r.index}] 为电子公告类文献，未见引用日期 [YYYY-MM-DD]。`
+              : `参考文献 [${r.index}] 为联机文献；2015 版对电子资源统一要求引用日期，但部分类型的实践存在差异，请人工确认。`,
+            suggestion: "补充引用日期，如 [2025-01-15]。",
+            anchors: [r.anchor],
+            source: {
+              clause: "8.4.4",
+              summary: "2015 版电子资源著录项目含引用日期。",
+              status: SECONDARY_2015,
+            },
+            confidence: isEB ? "high" : "medium",
+            requiresManualCheck: !isEB,
+            relatedIds: [r.id],
+          });
+        }
       }
       return drafts;
     },
     testCases: [
       {
-        name: "OL entry without cited date flagged",
+        name: "EB entry without cited date flagged (warning)",
         input: {
           references: [
             {
@@ -771,24 +829,383 @@ export const RULES: RuleDefinition[] = [
         expect: { issueCount: 1, severity: "warning" },
       },
       {
-        name: "OL entry with cited date passes",
+        name: "J/OL entry without cited date is legitimate (standard example form)",
+        version: "2025",
         input: {
           references: [
             {
               id: "r1",
               index: 1,
-              raw: "某作者. 在线文章[EB/OL]. (2024-05-01)[2025-01-15]. https://example.org/a.",
-              fields: { typeCode: "EB", carrierCode: "OL", typeIdentifier: "[EB/OL]", citedDate: "2025-01-15" },
+              raw: "张群, 程志宝, 石志飞. 惯性增强动力吸振器研究[J/OL]. 快速学报, 2024-05-09. https://kns.cnki.net/a.",
+              fields: { typeCode: "J", carrierCode: "OL", typeIdentifier: "[J/OL]" },
             },
           ],
         },
         expect: { issueCount: 0 },
       },
       {
-        name: "print entry without cited date passes",
+        name: "D/OL entry without cited date is legitimate under 2025",
+        version: "2025",
         input: {
           references: [
-            { id: "r1", index: 1, raw: "某作者. 文集[M]. 出版社, 2020.", fields: {} },
+            {
+              id: "r1",
+              index: 1,
+              raw: "金燕萍. 社交媒体时代的虚假信息研究[D/OL]. 温州: 温州大学, 2020: 16. https://d.wanfangdata.com.cn/x.",
+              fields: { typeCode: "D", carrierCode: "OL", typeIdentifier: "[D/OL]" },
+            },
+          ],
+        },
+        expect: { issueCount: 0 },
+      },
+      {
+        name: "D/OL entry without cited date → review under 2015",
+        version: "2015",
+        input: {
+          references: [
+            {
+              id: "r1",
+              index: 1,
+              raw: "金燕萍. 社交媒体时代的虚假信息研究[D/OL]. 温州: 温州大学, 2020: 16. https://d.wanfangdata.com.cn/x.",
+              fields: { typeCode: "D", carrierCode: "OL", typeIdentifier: "[D/OL]" },
+            },
+          ],
+        },
+        expect: { issueCount: 1, severity: "review" },
+      },
+      {
+        name: "DS entry with cited date passes",
+        version: "2025",
+        input: {
+          references: [
+            {
+              id: "r1",
+              index: 1,
+              raw: "某中心. 数据集[DS/OL]. 平台, 2024-01-01[2025-01-01]. https://example.com.",
+              fields: { typeCode: "DS", carrierCode: "OL", typeIdentifier: "[DS/OL]", citedDate: "2025-01-01" },
+            },
+          ],
+        },
+        expect: { issueCount: 0 },
+      },
+    ],
+  },
+
+  {
+    ruleId: "RR-FMT-014",
+    standardVersions: ["2025"],
+    category: "entry-format",
+    severity: "warning",
+    source: {
+      clause: "8.11.2 表10 / 8.15 表15",
+      summary:
+        "网站网页与预印本的获取和访问路径为必备著录项目；数据集（表14）的获取路径为电子资源必备。",
+      status: OFFICIAL_2025,
+    },
+    explanation:
+      "网站、网页与预印本必须著录获取和访问路径（URL）。缺失时读者无法定位该资源。",
+    suggestedFix: "补充资源的获取和访问路径（URL）。",
+    check: (ctx) => {
+      const drafts: IssueDraft[] = [];
+      for (const r of ctx.references) {
+        const code = r.fields.typeCode ?? "";
+        if (!["EB", "PP", "DS"].includes(code)) continue;
+        if (r.fields.url) continue;
+        drafts.push({
+          ruleId: "RR-FMT-014",
+          category: "entry-format",
+          severity: "warning",
+          messageKey: "issue.missingUrl",
+          messageParams: { index: r.index, type: code === "EB" ? "网站、网页" : code === "DS" ? "数据集" : "预印本" },
+          detail: `参考文献 [${r.index}] 为${
+            code === "EB" ? "网站、网页" : code === "DS" ? "数据集" : "预印本"
+          }类文献，获取和访问路径为必备著录项目，但未见 URL。`,
+          suggestion: "补充资源的获取和访问路径（URL）。",
+          anchors: [r.anchor],
+          source: {
+            clause: "8.11.2 表10 / 8.15 表15",
+            summary: "网站网页与预印本的获取和访问路径为必备。",
+            status: OFFICIAL_2025,
+          },
+          confidence: "high",
+          requiresManualCheck: false,
+          relatedIds: [r.id],
+        });
+      }
+      return drafts;
+    },
+    testCases: [
+      {
+        name: "EB entry without URL flagged",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "某作者. 网页[EB/OL]. [2025-01-15].", fields: { typeCode: "EB", carrierCode: "OL", citedDate: "2025-01-15" } },
+          ],
+        },
+        expect: { issueCount: 1, severity: "warning" },
+      },
+      {
+        name: "EB entry with URL passes",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "某作者. 网页[EB/OL]. [2025-01-15]. https://example.org.", fields: { typeCode: "EB", carrierCode: "OL", citedDate: "2025-01-15", url: "https://example.org" } },
+          ],
+        },
+        expect: { issueCount: 0 },
+      },
+    ],
+  },
+
+  {
+    ruleId: "RR-FMT-015",
+    standardVersions: ["2015", "2025"],
+    category: "entry-format",
+    severity: "review",
+    source: {
+      clause: "8.7.1 表6",
+      priorClause: "4.5",
+      summary: "学位论文的学位授予单位为必备著录项目；学位授予年、引文页码为有则必备。",
+      status: OFFICIAL_2025,
+    },
+    explanation:
+      "学位论文条目应著录学位授予单位（必备）。仅当条目解析置信度足够而结构中未见授予单位时提示；解析不可靠时不作判断。",
+    suggestedFix: "补充学位授予单位，如 “…[D]. 北京: 中国科学院大学, 2022.”",
+    check: (ctx) => {
+      const drafts: IssueDraft[] = [];
+      for (const r of ctx.references) {
+        if (r.fields.typeCode !== "D") continue;
+        if (r.fieldsConfidence === "low") continue; // unreliable parse → no conclusion
+        if (r.fields.publisher || r.fields.place) continue; // institution parsed
+        // High-structure D entries almost always read “地: 单位, 年”. If neither
+        // place nor publisher was found while the year was, flag for review.
+        if (!r.fields.year) continue;
+        drafts.push({
+          ruleId: "RR-FMT-015",
+          category: "entry-format",
+          severity: "review",
+          messageKey: "issue.missingInstitution",
+          messageParams: { index: r.index },
+          detail: `参考文献 [${r.index}] 为学位论文，未见学位授予单位（必备项），请人工确认。`,
+          suggestion: "补充学位授予单位，如 “…[D]. 北京: 中国科学院大学, 2022.”",
+          anchors: [r.anchor],
+          source: {
+            clause: clauseFor(ctx.version, "8.7.1 表6", "4.5"),
+            summary: "学位论文的学位授予单位为必备著录项目。",
+            status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
+          },
+          confidence: "medium",
+          requiresManualCheck: true,
+          relatedIds: [r.id],
+        });
+      }
+      return drafts;
+    },
+    testCases: [
+      {
+        name: "D entry without institution flagged for review",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "张三. 某研究[D]. 2022.", fields: { typeCode: "D", year: "2022" }, fieldsConfidence: "medium" },
+          ],
+        },
+        expect: { issueCount: 1, severity: "review" },
+      },
+      {
+        name: "D entry with institution passes",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "王琦. 融合星载GNSS-R和SAR数据的研究[D]. 武汉: 武汉大学, 2022: 87.", fields: { typeCode: "D", publisher: "武汉大学", place: "武汉", year: "2022" }, fieldsConfidence: "high" },
+          ],
+        },
+        expect: { issueCount: 0 },
+      },
+    ],
+  },
+
+  {
+    ruleId: "RR-FMT-016",
+    standardVersions: ["2015", "2025"],
+    category: "entry-format",
+    severity: "review",
+    source: {
+      clause: "8.5.1 / 8.5.2 表4",
+      priorClause: "8.8",
+      summary:
+        "期刊析出文献应注明年、卷、期、页码等（年卷期标识与页码为有则必备）；文章编号或在线出版日期可替代页码（8.5.1.1 示例6、示例7）。",
+      status: OFFICIAL_2025,
+    },
+    explanation:
+      "仅当期刊条目完全未见出版年时提示待复核（有则必备，不能确定性判错）。缺页码不提示：文章编号（示例6）与在线优先出版（示例7，仅日期）均为合法形式。",
+    suggestedFix: "核对并补充期刊出版年及卷期页码信息。",
+    check: (ctx) => {
+      const drafts: IssueDraft[] = [];
+      for (const r of ctx.references) {
+        if (r.fields.typeCode !== "J") continue;
+        if (r.fieldsConfidence === "low") continue;
+        if (r.fields.year) continue;
+        drafts.push({
+          ruleId: "RR-FMT-016",
+          category: "entry-format",
+          severity: "review",
+          messageKey: "issue.journalNoYear",
+          messageParams: { index: r.index },
+          detail: `参考文献 [${r.index}] 为期刊析出文献，未见出版年（年卷期/页码为有则必备项），请人工确认。`,
+          suggestion: "核对并补充期刊出版年及卷期页码信息。",
+          anchors: [r.anchor],
+          source: {
+            clause: clauseFor(ctx.version, "8.5.1 / 8.5.2 表4", "8.8"),
+            summary: "期刊析出文献应注明年卷期页码等（有则必备）。",
+            status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
+          },
+          confidence: "medium",
+          requiresManualCheck: true,
+          relatedIds: [r.id],
+        });
+      }
+      return drafts;
+    },
+    testCases: [
+      {
+        name: "J entry without year flagged for review",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "张三. 某研究[J]. 某学报.", fields: { typeCode: "J" }, fieldsConfidence: "medium" },
+          ],
+        },
+        expect: { issueCount: 1, severity: "review" },
+      },
+      {
+        name: "J entry with article number instead of pages is legitimate",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "李四. 某研究[J]. 学报, 2023, 267: 147370.", fields: { typeCode: "J", year: "2023", volume: "267", pages: "147370" }, fieldsConfidence: "high" },
+          ],
+        },
+        expect: { issueCount: 0 },
+      },
+    ],
+  },
+
+  {
+    ruleId: "RR-FMT-017",
+    standardVersions: ["2015", "2025"],
+    category: "entry-format",
+    severity: "warning",
+    source: {
+      clause: "7.6",
+      priorClause: "8.4.4",
+      summary: "电子资源的引用日期应按 YYYY-MM-DD 格式、用阿拉伯数字著录。",
+      status: OFFICIAL_2025,
+    },
+    explanation: "引用日期已著录但格式不符合 YYYY-MM-DD（如 2025.1.15、2025/01/15、2025年1月15日）时提示修正。",
+    suggestedFix: "将引用日期改为 YYYY-MM-DD 格式，如 [2025-01-15]。",
+    check: (ctx) => {
+      const drafts: IssueDraft[] = [];
+      for (const r of ctx.references) {
+        const d = r.fields.citedDate;
+        if (!d) continue;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+        drafts.push({
+          ruleId: "RR-FMT-017",
+          category: "entry-format",
+          severity: "warning",
+          messageKey: "issue.citedDateFormat",
+          messageParams: { index: r.index, date: d },
+          detail: `参考文献 [${r.index}] 的引用日期“${d}”不符合 YYYY-MM-DD 格式。`,
+          suggestion: "将引用日期改为 YYYY-MM-DD 格式，如 [2025-01-15]。",
+          anchors: [r.anchor],
+          source: {
+            clause: clauseFor(ctx.version, "7.6", "8.4.4"),
+            summary: "引用日期应按 YYYY-MM-DD 格式著录。",
+            status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
+          },
+          confidence: "high",
+          requiresManualCheck: false,
+          relatedIds: [r.id],
+          fixPreview: citedDateFixPreview(r.raw, d),
+        });
+      }
+      return drafts;
+    },
+    testCases: [
+      {
+        name: "non-ISO cited date flagged",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "某作者. 网页[EB/OL]. [2025.1.15]. https://example.org.", fields: { typeCode: "EB", citedDate: "2025.1.15" } },
+          ],
+        },
+        expect: { issueCount: 1, severity: "warning" },
+      },
+      {
+        name: "ISO cited date passes",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "某作者. 网页[EB/OL]. [2025-01-15]. https://example.org.", fields: { typeCode: "EB", citedDate: "2025-01-15" } },
+          ],
+        },
+        expect: { issueCount: 0 },
+      },
+    ],
+  },
+
+  {
+    ruleId: "RR-FMT-018",
+    standardVersions: ["2015", "2025"],
+    category: "entry-format",
+    severity: "warning",
+    source: {
+      clause: "8.9.1 表8 / 8.9.2",
+      priorClause: "4.4",
+      summary: "标准文献应著录标准编号（必备）与标准名称（必备），编号置于条目开头。",
+      status: OFFICIAL_2025,
+    },
+    explanation:
+      "标准文献条目以标准编号开头（如 GB/T 7714—2025、ISO 3166）。[S] 条目若不以标准编号形态开头，通常缺少编号。",
+    suggestedFix: "在条目开头补充标准编号，如 “GB/T 7714—2025 信息与文献 参考文献著录规则[S].”",
+    check: (ctx) => {
+      const drafts: IssueDraft[] = [];
+      for (const r of ctx.references) {
+        if (r.fields.typeCode !== "S") continue;
+        // Standard-number shape: GB/T 7714—2025, NB/T 10386—2020, ISO 3166, IEC/IEEE 61636-1: 2021
+        const hasNumber = /^\s*[A-Z]{2,6}(?:\/[A-Z]{1,3})?\s*\d/.test(r.raw);
+        if (hasNumber) continue;
+        drafts.push({
+          ruleId: "RR-FMT-018",
+          category: "entry-format",
+          severity: "warning",
+          messageKey: "issue.missingStandardNumber",
+          messageParams: { index: r.index },
+          detail: `参考文献 [${r.index}] 为标准文献，未见标准编号（必备项），条目应以编号开头（如 GB/T 7714—2025）。`,
+          suggestion: "在条目开头补充标准编号与名称。",
+          anchors: [r.anchor],
+          source: {
+            clause: clauseFor(ctx.version, "8.9.1 表8", "4.4"),
+            summary: "标准文献应著录标准编号（必备）。",
+            status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
+          },
+          confidence: "medium",
+          requiresManualCheck: false,
+          relatedIds: [r.id],
+        });
+      }
+      return drafts;
+    },
+    testCases: [
+      {
+        name: "S entry without standard number flagged",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "信息与文献 参考文献著录规则[S]. 北京: 中国标准出版社, 2015.", fields: { typeCode: "S" } },
+          ],
+        },
+        expect: { issueCount: 1, severity: "warning" },
+      },
+      {
+        name: "S entry with standard number passes",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "GB/T 7714—2025 信息与文献 参考文献著录规则[S]. 北京: 中国标准出版社, 2025.", fields: { typeCode: "S" } },
           ],
         },
         expect: { issueCount: 0 },

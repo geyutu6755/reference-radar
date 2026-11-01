@@ -1,5 +1,45 @@
+import { useState } from "react";
 import type { AnalysisResult, Issue, Severity } from "../core/types";
 import { useApp } from "./AppContext";
+
+/** Mechanical fix preview + copy. Never invents bibliographic content. */
+function FixPreview({ issue }: { issue: Issue }): React.ReactNode {
+  const { tr } = useApp();
+  const [copied, setCopied] = useState(false);
+  const fp = issue.fixPreview!;
+  const anchorText = issue.anchors[0]?.text ?? "";
+  const corrected = anchorText.replace(fp.find, fp.replace);
+
+  const copy = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(corrected);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <div className="rr-fixpreview">
+      <div className="rr-fixpreview__title">{tr("fix.previewTitle")}</div>
+      <div className="rr-fixpreview__row">
+        <span className="rr-fixpreview__label">{tr("fix.before")}</span>
+        <code className="rr-fixpreview__before">{fp.find}</code>
+      </div>
+      <div className="rr-fixpreview__row">
+        <span className="rr-fixpreview__label">{tr("fix.after")}</span>
+        <code className="rr-fixpreview__after">{fp.replace}</code>
+      </div>
+      <div className="rr-fixpreview__actions">
+        <button type="button" className="rr-btn rr-btn--sm" onClick={() => void copy()} disabled={copied}>
+          {copied ? tr("fix.copied") : tr("fix.copy")}
+        </button>
+        <span className="rr-fixpreview__note">{tr("fix.noFabrication")}</span>
+      </div>
+    </div>
+  );
+}
 
 interface IssuesPanelProps {
   result: AnalysisResult;
@@ -74,6 +114,7 @@ export default function IssuesPanel(props: IssuesPanelProps): React.ReactNode {
                   {issue.suggestion}
                 </div>
               )}
+              {issue.fixPreview && <FixPreview issue={issue} />}
               <div className="rr-issue__basis">
                 <span>
                   <b>{tr("workbench.ruleBasis")}</b> · GB/T 7714—{issue.standardVersion === "2025" ? "2025" : "2015"} 第{" "}

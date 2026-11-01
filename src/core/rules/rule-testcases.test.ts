@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { RULES } from "./definitions";
 import { runRules } from "./engine";
-import type { Citation, ReferenceEntry, Relation, RuleContext, RuleTestInput } from "../types";
+import type { Citation, ReferenceEntry, Relation, RuleContext, RuleTestInput, StandardVersion } from "../types";
 
 /** Fill defaults so rule test cases can declare partial inputs concisely. */
 function normalizeCitation(c: Partial<Citation>, i: number): Citation {
@@ -80,10 +80,10 @@ describe("rule test cases", () => {
   for (const rule of RULES) {
     describe(rule.ruleId, () => {
       for (const tc of rule.testCases) {
-        it(tc.name, () => {
-          const versions = rule.standardVersions;
-          const version = versions[0]!;
-          const issues = runRules(ctxFor(version, tc.input)).filter((i) => i.ruleId === rule.ruleId);
+        const targetVersions: StandardVersion[] = tc.version ? [tc.version] : rule.standardVersions;
+        for (const version of targetVersions) {
+          it(tc.name + (tc.version ? ` [${version}]` : ""), () => {
+            const issues = runRules(ctxFor(version, tc.input)).filter((i) => i.ruleId === rule.ruleId);
           if (tc.expect.issueCount !== undefined) {
             expect(issues).toHaveLength(tc.expect.issueCount);
           } else {
@@ -92,10 +92,11 @@ describe("rule test cases", () => {
           if (tc.expect.severity !== undefined && issues.length > 0) {
             expect(issues.every((i) => i.severity === tc.expect.severity)).toBe(true);
           }
-          for (const frag of tc.expect.detailIncludes ?? []) {
-            expect(issues.some((i) => i.detail.includes(frag))).toBe(true);
-          }
-        });
+            for (const frag of tc.expect.detailIncludes ?? []) {
+              expect(issues.some((i) => i.detail.includes(frag))).toBe(true);
+            }
+          });
+        }
       }
     });
   }

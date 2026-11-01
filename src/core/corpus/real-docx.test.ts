@@ -51,7 +51,7 @@ const SAMPLES: RealSample[] = [
         markers: ["[2]", "[3, 6-9]"],
         references: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
         errors: { "RR-CIT-004": 1 },
-        warnings: { "RR-FMT-013": 4 },
+        warnings: {},
         infos: { "RR-REF-011": 9 },
         refsDetected: true,
       },
@@ -59,8 +59,9 @@ const SAMPLES: RealSample[] = [
         markers: ["[2]", "[3, 6-9]"],
         references: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
         errors: { "RR-CIT-004": 1 },
-        warnings: { "RR-FMT-013": 4, "RR-FMT-008": 2 },
+        warnings: { "RR-FMT-008": 2 },
         infos: { "RR-REF-011": 9 },
+        reviewsAtLeast: 4, // 2015 电子资源统一要求引用日期 → P/R/D/S-OL 四条待复核
         refsDetected: true,
       },
     },
@@ -151,7 +152,7 @@ describe("real-document compatibility (skipped when sample files absent)", () =>
   }
 
   it("summary", () => {
-    // eslint-disable-next-line no-console
+     
     console.warn(
       `[real-docx] marker recall=${(metrics.tp / Math.max(1, metrics.tp + metrics.fn)).toFixed(3)} precision=${(metrics.tp / Math.max(1, metrics.det)).toFixed(3)}\n${metrics.rows.join("\n")}`
     );

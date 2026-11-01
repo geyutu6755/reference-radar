@@ -226,12 +226,24 @@ export interface Issue {
   requiresManualCheck: boolean;
   /** Related citation/entry ids for graph highlighting. */
   relatedIds: string[];
+  /**
+   * Mechanical, no-fabrication fix preview: only the exact substring is
+   * rewritten (e.g. normalizing a date format). Present only when the fix
+   * can be produced without inventing any bibliographic content.
+   */
+  fixPreview?: {
+    find: string;
+    replace: string;
+    description: string;
+  };
 }
 
 export interface RuleTestCase {
   name: string;
   input: RuleTestInput;
   expect: RuleTestExpectation;
+  /** When set, the case only runs under this standard version. */
+  version?: StandardVersion;
 }
 
 export interface RuleTestInput {
