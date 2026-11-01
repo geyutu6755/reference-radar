@@ -30,6 +30,7 @@ export default function Workbench({ result, fileName, sourceBytes, onHome, onRes
   const [activeBlockIndex, setActiveBlockIndex] = useState<number | null>(null);
   const [version, setVersion] = useState<StandardVersion>(result.version);
   const [reanalyzing, setReanalyzing] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [errorKey, setErrorKey] = useState<ReturnType<typeof errorToKey> | null>(null);
   const blockEls = useRef(new Map<number, HTMLElement>());
   const flashTimer = useRef<number | undefined>(undefined);
@@ -165,8 +166,24 @@ export default function Workbench({ result, fileName, sourceBytes, onHome, onRes
           <button className="rr-btn rr-btn--sm" onClick={exportHtml}>
             {tr("workbench.exportHtml")}
           </button>
-          <button className="rr-btn rr-btn--sm" onClick={() => import("./report-pdf").then((m) => m.exportPdfReport(result, fileName, locale)).catch((e) => setErrorKey({ key: "error.generic", params: { message: (e as Error).message } }))}>
-            {tr("workbench.exportPdf")}
+          <button
+            className="rr-btn rr-btn--sm"
+            disabled={pdfBusy}
+            title={locale === "zh-CN" ? "首次导出需加载中文字体（约 10 MB），请稍候" : "First export loads the CJK font (~10 MB)"}
+            onClick={async () => {
+              setPdfBusy(true);
+              setErrorKey(null);
+              try {
+                const m = await import("./report-pdf");
+                await m.exportPdfReport(result, fileName, locale);
+              } catch (e) {
+                setErrorKey({ key: "error.generic", params: { message: (e as Error).message } });
+              } finally {
+                setPdfBusy(false);
+              }
+            }}
+          >
+            {pdfBusy ? (locale === "zh-CN" ? "正在生成 PDF…" : "Generating PDF…") : tr("workbench.exportPdf")}
           </button>
           <button className="rr-btn rr-btn--ghost rr-btn--sm" onClick={() => setLocale(locale === "zh-CN" ? "en" : "zh-CN")} aria-label="language">
             {locale === "zh-CN" ? "EN" : "中文"}
