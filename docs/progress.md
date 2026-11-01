@@ -73,3 +73,18 @@ Live status of the V1.0 development plan. Updated each iteration.
 - [x] Adoption: user guide (zh/en), feedback plan, usage template, Discussions,
       topics refresh, zh SEO metadata, README links
 - [x] v1.0.1 released; v1.0.0 tag untouched; release commit = deployed commit
+
+
+## V1.1.0 — professional entry-format checking ✅ (2026-11-01)
+
+- [x] Rule-correctness audit: every per-type 必备性 table read in the official
+      scan; RR-FMT-013 rewritten (cited date only for 网页/数据集/预印本);
+      real-template false positives eliminated
+- [x] Rules 14 → 19: RR-FMT-014 (URL), RR-FMT-015 (thesis institution, review),
+      RR-FMT-016 (journal year, review; article numbers legitimate),
+      RR-FMT-017 (date format + fix preview), RR-FMT-018 (standard number)
+- [x] 预览修改/复制建议: mechanical-only fix previews, no fabricated fields
+- [x] Real-document validation: explicit skip reporting; redistributable
+      derived fixtures (R-D1/R-D2) permanent in CI; 3 real documents recorded
+- [x] Issue grouping for long documents (verified on 1402-block standard)
+- [x] v1.1.0 released; release commit = deployed commit (93fbdd1)

@@ -144,3 +144,42 @@ https://geyutu6755.github.io/reference-radar/:
 - v1.0.1 Release target = `7cbd6ad` = deployed Pages build (CI + Deploy both
   success on that commit); live `sw.js` serves `rr-v1.0.1` and the page
   carries the new SEO metadata. v1.0.0 tag and release untouched.
+
+
+## V1.1.0 verification (2026-11-01)
+
+### Per-type 必备性 audit (phase 1)
+
+Tables 1–15 of GB/T 7714—2025 read visually in the official scan (PDF pages
+13–28). Verified: cited date 必备 only for 网站网页(表10)/数据集(表14)/预印本
+(表15); 期刊年卷期页码、图书出版信息、学位授予年 etc. are 有则必备; 学位授予
+单位、专利申请号、标准编号 are 必备; 期刊文章编号/在线优先日期合法
+(8.5.1.1 示例6/7). RR-FMT-013 rewritten on that basis (false-positive fix);
+R-01 real-template annotations corrected and re-verified.
+
+### New-rule test evidence (phase 2)
+
+RR-FMT-014/015/016/017/018 each carry positive, negative and legal-exception
+test cases executed by the meta-runner (now version-aware: cases can pin a
+standard version). 184 tests green at release.
+
+### Fix preview (phase 3)
+
+Mechanical-only rewrites with before/after display + clipboard copy; verified
+for RR-FMT-011 (page separator) and RR-FMT-017 (date format). No rule can
+fabricate missing bibliographic content (no such capability exists in code).
+
+### Real-document validation (phase 4)
+
+- Explicit skip reporting: environments without the local real files show
+  `ran=0/3 skipped=R-01,R-02,R-03` — verified by hiding the directory.
+- Redistributable derived fixtures R-D1 (北航 15 entries) / R-D2 (人大 6
+  entries incl. empty slots) committed and permanent in CI: compressed
+  punctuation, PP/DS codes, broken URLs, zero false positives.
+- Sample count honestly stated: 3 real documents (2 university templates + 1
+  standard text); acquisition limits documented in real-docx-validation.md.
+
+### Release consistency
+
+v1.1.0 Release target = HEAD = 93fbdd1 = deployed Pages build (CI + Deploy
+success); live sw.js serves rr-v1.1.0. Earlier tags (v1.0.0–v1.0.2) untouched.
