@@ -4,7 +4,7 @@
 
 **免费、开源、本地优先的学术论文引文与参考文献核查工具，围绕 GB/T 7714 国家标准构建。**
 
-[在线演示](https://geyutu6755.github.io/reference-radar/) · [English](README.md) · [问题反馈](https://github.com/geyutu6755/reference-radar/issues)
+[在线演示](https://geyutu6755.github.io/reference-radar/) · [新用户教程](docs/user-guide.md) · [English](README.md) · [问题反馈](https://github.com/geyutu6755/reference-radar/issues/new/choose)
 
 *每项判断都标注标准条款，并定位到原文。*
 
@@ -43,6 +43,9 @@
 
 - **GB/T 7714—2025**（现行，2026-07-01 实施）——已实现 12 条规则；接受 2025 新增的 `DS`、`PP`、`MM` 等代码。
 - **GB/T 7714—2015**（已被代替）——同一批结构性规则按 2015 版条款编号；2025 独有代码在该版本下会给出未定义提示。
+- **独立语料验证**：20 篇外部语料（独立生成器 + 人工先行标注）实测标记
+  精确率/召回率 1.000、确定性错误 0 误报 0 漏报，见
+  [`docs/external-validation.md`](docs/external-validation.md)。
 - v1.0 **明确不检查**：著者-出版年制、2025 新增各文献类型的完整必备项核查、对整个标准的合规认证。"未被正文引用"只作为提示信息，不判定为违规。详见 [`docs/limitations.md`](docs/limitations.md)。
 
 ## 为什么是本地优先？
@@ -95,6 +98,13 @@ DOCX 字节 → 安全解包（fflate + 炸弹/路径防护）
   会议录、学位论文、报告、标准、网站网页、档案、地图、数据集、预印本九类文献
   实现必备项核查。
 - **更远。** 将解析器与规则引擎独立发布为 npm 包；基于可核验来源扩展规则覆盖。
+
+## 反馈与公开测试
+
+欢迎用自己的论文试一试，告诉我们哪里出错：[选择模板提交
+Issue](https://github.com/geyutu6755/reference-radar/issues/new/choose)——
+反馈计划见 [`docs/feedback.md`](docs/feedback.md)，三分钟上手教程见
+[`docs/user-guide.md`](docs/user-guide.md)。
 
 ## 参与贡献
 

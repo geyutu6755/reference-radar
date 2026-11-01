@@ -4,7 +4,7 @@
 
 **Free, open-source, local-first citation & reference checker for academic papers — built around GB/T 7714 (Chinese national standard for bibliographic references).**
 
-[Online demo](https://geyutu6755.github.io/reference-radar/) · [中文说明](README.zh-CN.md) · [Report an issue](https://github.com/geyutu6755/reference-radar/issues)
+[Online demo](https://geyutu6755.github.io/reference-radar/) · [New-user guide](docs/user-guide.md) · [中文说明](README.zh-CN.md) · [Report an issue](https://github.com/geyutu6755/reference-radar/issues/new/choose)
 
 *Every finding cites its standard clause and points at the exact text.*
 
@@ -43,6 +43,10 @@ Rules are versioned per standard edition and every rule carries a source clause 
 
 - **GB/T 7714—2025** (current, effective 2026-07-01) — 12 rules implemented; new-in-2025 type codes (`DS`, `PP`, `MM`) accepted.
 - **GB/T 7714—2015** (superseded) — same structural rules with 2015 clause numbering; 2025-only codes are flagged as undefined in this edition.
+- **Independent validation:** an external 20-document corpus (separate
+  generator, hand annotations) measures marker precision/recall and issue
+  false positives — currently 1.000/1.000 with zero FPs; see
+  [`docs/external-validation.md`](docs/external-validation.md).
 - Explicitly **not** implemented in v1.0: the author–year (著者-出版年制) style, per-type field-completeness rules for all new 2025 entry types, and full-standard compliance certification. Uncited entries are reported as *info*, never as violations. See [`docs/limitations.md`](docs/limitations.md).
 
 ## Why local-first?
@@ -99,6 +103,13 @@ Planned versions — nothing on this list is shipped yet; see
   网站网页/档案/地图/数据集/预印本), grounded in verified clause tables.
 - **Later.** Standalone npm publication of the parser and rule engine; a
   rule-coverage expansion driven by verifiable sources.
+
+## Feedback & public beta
+
+Try it on your own paper and tell us what breaks: [open an issue with the
+matching template](https://github.com/geyutu6755/reference-radar/issues/new/choose)
+— see [`docs/feedback.md`](docs/feedback.md) for the beta feedback plan and
+[`docs/user-guide.md`](docs/user-guide.md) for a three-minute tutorial.
 
 ## Contributing
 
