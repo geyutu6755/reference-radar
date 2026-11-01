@@ -146,10 +146,23 @@ export interface ReferenceFields {
   source?: string;
   volume?: string;
   issue?: string;
+  /** Page range normalised to the `24-33` shape. */
   pages?: string;
+  /**
+   * Page range exactly as printed (V1.1.1). Rules must read this, because the
+   * separator characters they police are erased by normalisation.
+   */
+  pagesRaw?: string;
   doi?: string;
   url?: string;
+  /** Cited date in `YYYY-MM-DD` form when the printed value can be determined. */
   citedDate?: string;
+  /**
+   * Cited date exactly as printed inside its square brackets (V1.1.1).
+   * Present-but-malformed must stay distinguishable from absent, otherwise a
+   * format problem is reported as a missing required element.
+   */
+  citedDateRaw?: string;
   publisher?: string;
   place?: string;
   edition?: string;
