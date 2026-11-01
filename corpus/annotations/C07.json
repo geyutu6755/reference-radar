@@ -1,0 +1,27 @@
+{
+  "id": "C07",
+  "title": "未引用条目",
+  "description": "[4]列出但从未被引用（仅提示）",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]",
+      "[3]"
+    ],
+    "references": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {
+      "RR-REF-011": 1
+    },
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

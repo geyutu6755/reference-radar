@@ -1,0 +1,16 @@
+{
+  "id": "C15",
+  "title": "损坏文件",
+  "description": "非ZIP字节流，应抛出 not-docx",
+  "expect": {
+    "markers": [],
+    "references": [],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": "thrown: not-docx"
+}

@@ -28,9 +28,14 @@ status and test status. **Partial coverage is not full-standard compliance.**
 | RR-REF-007 | Duplicate entry text; near-duplicate suspicion | 9.2.1.3 | 10.1.1 | same | error / review |
 | RR-FMT-008 | Type/carrier codes exist in the version's table | Annex A | Annex B | 2025 official / 2015 secondary | warning |
 | RR-FMT-010 | Missing type identifier → manual review | 6.2 / 7.3 | 7.2 / 8 | same | review |
+| RR-FMT-011 | Page ranges must use hyphen "-" (v1.0.1) | 6.2 | 7.2 | same | warning |
+| RR-FMT-013 | Online (/OL) entries require cited date [YYYY-MM-DD] (v1.0.1) | 7.6 / 8.11 | 8.4.4 | same | warning |
 | RR-REF-011 | Uncited entries (info only, not a violation) | 9.2.2 | 10.1.2 | same | info |
 | RR-SCOPE-012 | No reference list found | 9.2 | 10.1 | same | warning |
 | RR-SCOPE-013 | Ambiguous bracketed markers → review queue | 9.2.1.2 | 10.1.1 | same | review |
+
+**Rule count: 14** (12 structural/format families in v1.0.0 + RR-FMT-011 and
+RR-FMT-013 added in v1.0.1 from the verified clause text of chapter 6.2 and 7.6).
 
 ## Version-specific code tables
 

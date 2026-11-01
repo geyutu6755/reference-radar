@@ -1,0 +1,22 @@
+{
+  "id": "C09",
+  "title": "脚注中引用",
+  "description": "正文[1]，脚注内[2]（真实footnoteReference结构）",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]"
+    ],
+    "references": [
+      1,
+      2
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

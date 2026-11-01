@@ -1,0 +1,52 @@
+{
+  "id": "C20",
+  "title": "类型代码版本差异",
+  "description": "[DS/OL]在2025合法、2015未定义",
+  "expect": {
+    "markers": [
+      "[1]"
+    ],
+    "references": [
+      1
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": "2015下警告RR-FMT-008×1；2025下无问题",
+  "versions": {
+    "2025": {
+      "markers": [
+        "[1]"
+      ],
+      "references": [
+        1
+      ],
+      "errors": {},
+      "warnings": {},
+      "infos": {},
+      "reviewsAtLeast": 0,
+      "referenceSectionDetected": true,
+      "missingRelations": 0
+    },
+    "2015": {
+      "markers": [
+        "[1]"
+      ],
+      "references": [
+        1
+      ],
+      "errors": {},
+      "warnings": {
+        "RR-FMT-008": 1
+      },
+      "infos": {},
+      "reviewsAtLeast": 0,
+      "referenceSectionDetected": true,
+      "missingRelations": 0
+    }
+  }
+}

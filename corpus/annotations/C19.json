@@ -1,0 +1,22 @@
+{
+  "id": "C19",
+  "title": "疑似重复条目",
+  "description": "同作者同年同刊仅页码不同 → 待复核（非确定性）",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]"
+    ],
+    "references": [
+      1,
+      2
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 1,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

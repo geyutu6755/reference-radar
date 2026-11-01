@@ -1,0 +1,27 @@
+{
+  "id": "C03",
+  "title": "编号重复",
+  "description": "[2]被两条不同条目使用",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]",
+      "[3]"
+    ],
+    "references": [
+      1,
+      2,
+      2,
+      3
+    ],
+    "errors": {
+      "RR-REF-002": 1
+    },
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

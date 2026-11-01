@@ -1,0 +1,23 @@
+{
+  "id": "C11",
+  "title": "表格混排",
+  "description": "表内文献[2]为正常引用，样本[1,2]为数据标注应转待复核",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]",
+      "[1,2]"
+    ],
+    "references": [
+      1,
+      2
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 1,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

@@ -1,0 +1,28 @@
+{
+  "id": "C12",
+  "title": "中文标点变体",
+  "description": "全角括号/全角逗号/破折号区间应全部识别",
+  "expect": {
+    "markers": [
+      "［1］",
+      "［2，3—5］",
+      "[6,7]"
+    ],
+    "references": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

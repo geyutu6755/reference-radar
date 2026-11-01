@@ -1,0 +1,23 @@
+{
+  "id": "C13",
+  "title": "非引文方括号",
+  "description": "向量/区间等不得产生确定性错误；[0,1]因0号应转待复核",
+  "expect": {
+    "markers": [
+      "[1,2]",
+      "[0,1]",
+      "[1]"
+    ],
+    "references": [
+      1,
+      2
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 2,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

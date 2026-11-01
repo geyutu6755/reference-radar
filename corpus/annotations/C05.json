@@ -1,0 +1,30 @@
+{
+  "id": "C05",
+  "title": "倒置区间",
+  "description": "[4-2]起号大于讫号；[4]因此未被有效引用",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]",
+      "[3]",
+      "[4-2]"
+    ],
+    "references": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "errors": {
+      "RR-CIT-006": 1
+    },
+    "warnings": {},
+    "infos": {
+      "RR-REF-011": 1
+    },
+    "reviewsAtLeast": 1,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

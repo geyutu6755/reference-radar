@@ -1,0 +1,28 @@
+{
+  "id": "C01",
+  "title": "标准中文论文（全部正确）",
+  "description": "期刊/图书/英文期刊/学位论文/数据集混合，全部规范引用",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]",
+      "[3]",
+      "[4]",
+      "[5]"
+    ],
+    "references": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

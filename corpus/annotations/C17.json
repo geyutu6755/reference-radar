@@ -1,0 +1,23 @@
+{
+  "id": "C17",
+  "title": "英文论文",
+  "description": "References标题与et al风格条目",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2-3]"
+    ],
+    "references": [
+      1,
+      2,
+      3
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

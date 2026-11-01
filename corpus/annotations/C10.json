@@ -1,0 +1,20 @@
+{
+  "id": "C10",
+  "title": "Zotero域引用",
+  "description": "域代码+显示文本[1]，应按显示文本分析",
+  "expect": {
+    "markers": [
+      "[1]"
+    ],
+    "references": [
+      1
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

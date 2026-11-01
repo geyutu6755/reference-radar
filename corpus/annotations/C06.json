@@ -1,0 +1,26 @@
+{
+  "id": "C06",
+  "title": "完全重复著录",
+  "description": "[2]与[3]内容逐字相同",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]",
+      "[3]"
+    ],
+    "references": [
+      1,
+      2,
+      3
+    ],
+    "errors": {
+      "RR-REF-007": 1
+    },
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

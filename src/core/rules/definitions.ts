@@ -498,7 +498,7 @@ export const RULES: RuleDefinition[] = [
               requiresManualCheck: false,
               relatedIds: [a.r.id, b.r.id],
             });
-          } else if (similarity(a.key, b.key) > 0.9) {
+          } else if (similarity(a.key, b.key) > 0.85) {
             drafts.push({
               ruleId: "RR-REF-007",
               category: "reference-list",
@@ -646,6 +646,152 @@ export const RULES: RuleDefinition[] = [
           ],
         },
         expect: { issueCount: 1, severity: "review" },
+      },
+    ],
+  },
+
+  {
+    ruleId: "RR-FMT-011",
+    standardVersions: ["2015", "2025"],
+    category: "entry-format",
+    severity: "warning",
+    source: {
+      clause: "6.2",
+      priorClause: "7.2",
+      summary: "起讫页码间应使用短横线“-”连接（“-”用于起讫页码、起讫序号间）。",
+      status: OFFICIAL_2025,
+    },
+    explanation:
+      "页码起讫应使用半角短横线“-”（如 24-33）。使用全角波浪线（～）、全角破折号（—）或 en dash（–）连接页码不符合著录用符号规定。",
+    suggestedFix: "将页码间的连接符改为半角短横线“-”。",
+    check: (ctx) => {
+      const drafts: IssueDraft[] = [];
+      for (const r of ctx.references) {
+        const pages = r.fields.pages;
+        if (!pages) continue;
+        if (/^\d{1,5}\s*[-–—～~]\s*\d{1,5}$/.test(pages) && !/^\d{1,5}-\d{1,5}$/.test(pages)) {
+          drafts.push({
+            ruleId: "RR-FMT-011",
+            category: "entry-format",
+            severity: "warning",
+            messageKey: "issue.pagesDash",
+            messageParams: { index: r.index, pages },
+            detail: `参考文献 [${r.index}] 页码“${pages}”未使用短横线“-”连接起讫页码。`,
+            suggestion: "按著录用符号规定，将页码连接符改为半角短横线，如 24-33。",
+            anchors: [r.anchor],
+            source: {
+              clause: clauseFor(ctx.version, "6.2", "7.2"),
+              summary: "起讫页码间用短横线“-”连接。",
+              status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
+            },
+            confidence: "high",
+            requiresManualCheck: false,
+            relatedIds: [r.id],
+          });
+        }
+      }
+      return drafts;
+    },
+    testCases: [
+      {
+        name: "wave-dash page range flagged",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "张三. 某文[J]. 学报, 2020, 1(2): 24～33.", fields: { pages: "24～33" } },
+          ],
+        },
+        expect: { issueCount: 1, detailIncludes: ["24～33"], severity: "warning" },
+      },
+      {
+        name: "hyphen page range passes",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "张三. 某文[J]. 学报, 2020, 1(2): 24-33.", fields: { pages: "24-33" } },
+          ],
+        },
+        expect: { issueCount: 0 },
+      },
+    ],
+  },
+
+  {
+    ruleId: "RR-FMT-013",
+    standardVersions: ["2015", "2025"],
+    category: "entry-format",
+    severity: "warning",
+    source: {
+      clause: "7.6 / 8.11",
+      priorClause: "8.4.4",
+      summary:
+        "电子资源的创建/发布或修改日期、引用日期应按 YYYY-MM-DD 格式著录；联机文献的引用日期为必备著录项目。",
+      status: OFFICIAL_2025,
+    },
+    explanation:
+      "带联机网络载体（/OL）的条目应著录引用日期 [YYYY-MM-DD]。缺少引用日期是电子资源著录最常见的缺项之一。",
+    suggestedFix: "为该条目补充引用日期，如 [2025-01-15]。",
+    check: (ctx) => {
+      const drafts: IssueDraft[] = [];
+      for (const r of ctx.references) {
+        if (r.fields.carrierCode !== "OL") continue;
+        if (r.fields.citedDate) continue;
+        drafts.push({
+          ruleId: "RR-FMT-013",
+          category: "entry-format",
+          severity: "warning",
+          messageKey: "issue.missingCitedDate",
+          messageParams: { index: r.index },
+          detail: `参考文献 [${r.index}] 为联机文献（/OL），未见引用日期 [YYYY-MM-DD]。`,
+          suggestion: "补充引用日期，如 [2025-01-15]。",
+          anchors: [r.anchor],
+          source: {
+            clause: clauseFor(ctx.version, "7.6 / 8.11", "8.4.4"),
+            summary: "联机文献应著录引用日期，按 YYYY-MM-DD 格式。",
+            status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
+          },
+          confidence: "high",
+          requiresManualCheck: false,
+          relatedIds: [r.id],
+        });
+      }
+      return drafts;
+    },
+    testCases: [
+      {
+        name: "OL entry without cited date flagged",
+        input: {
+          references: [
+            {
+              id: "r1",
+              index: 1,
+              raw: "某作者. 在线文章[EB/OL]. (2024-05-01). https://example.org/a.",
+              fields: { typeCode: "EB", carrierCode: "OL", typeIdentifier: "[EB/OL]" },
+            },
+          ],
+        },
+        expect: { issueCount: 1, severity: "warning" },
+      },
+      {
+        name: "OL entry with cited date passes",
+        input: {
+          references: [
+            {
+              id: "r1",
+              index: 1,
+              raw: "某作者. 在线文章[EB/OL]. (2024-05-01)[2025-01-15]. https://example.org/a.",
+              fields: { typeCode: "EB", carrierCode: "OL", typeIdentifier: "[EB/OL]", citedDate: "2025-01-15" },
+            },
+          ],
+        },
+        expect: { issueCount: 0 },
+      },
+      {
+        name: "print entry without cited date passes",
+        input: {
+          references: [
+            { id: "r1", index: 1, raw: "某作者. 文集[M]. 出版社, 2020.", fields: {} },
+          ],
+        },
+        expect: { issueCount: 0 },
       },
     ],
   },

@@ -1,0 +1,22 @@
+{
+  "id": "C08",
+  "title": "Word自动编号文献表",
+  "description": "numbering.xml渲染为[n]的条目",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]"
+    ],
+    "references": [
+      1,
+      2
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

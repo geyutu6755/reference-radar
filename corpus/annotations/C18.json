@@ -1,0 +1,22 @@
+{
+  "id": "C18",
+  "title": "References标题",
+  "description": "中文论文以References为文献表标题",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]"
+    ],
+    "references": [
+      1,
+      2
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

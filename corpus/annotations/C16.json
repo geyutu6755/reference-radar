@@ -1,0 +1,23 @@
+{
+  "id": "C16",
+  "title": "多段落条目",
+  "description": "[1]跨两段（续行无编号），[2]未被引用",
+  "expect": {
+    "markers": [
+      "[1]"
+    ],
+    "references": [
+      1,
+      2
+    ],
+    "errors": {},
+    "warnings": {},
+    "infos": {
+      "RR-REF-011": 1
+    },
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 0
+  },
+  "note": ""
+}

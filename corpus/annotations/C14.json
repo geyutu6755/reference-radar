@@ -1,0 +1,20 @@
+{
+  "id": "C14",
+  "title": "无参考文献章节",
+  "description": "仅正文引用[1]，无文献表",
+  "expect": {
+    "markers": [
+      "[1]"
+    ],
+    "references": [],
+    "errors": {},
+    "warnings": {
+      "RR-SCOPE-012": 1
+    },
+    "infos": {},
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": false,
+    "missingRelations": 0
+  },
+  "note": ""
+}

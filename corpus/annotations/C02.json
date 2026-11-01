@@ -1,0 +1,31 @@
+{
+  "id": "C02",
+  "title": "缺失文献",
+  "description": "正文引用[5]但列表仅1-4；条目[4]未被引用",
+  "expect": {
+    "markers": [
+      "[1]",
+      "[2]",
+      "[3]",
+      "[5]"
+    ],
+    "references": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "errors": {
+      "RR-CIT-001": 1,
+      "RR-CIT-004": 1
+    },
+    "warnings": {},
+    "infos": {
+      "RR-REF-011": 1
+    },
+    "reviewsAtLeast": 0,
+    "referenceSectionDetected": true,
+    "missingRelations": 1
+  },
+  "note": "[5]首次出现时预期编号应为[4]，故同时触发顺序错误"
+}
