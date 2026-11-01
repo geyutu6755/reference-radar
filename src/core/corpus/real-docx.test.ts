@@ -152,9 +152,12 @@ describe("real-document compatibility (skipped when sample files absent)", () =>
   }
 
   it("summary", () => {
-     
+    const skipped = SAMPLES.filter((x) => !existsSync(join(DIR, x.file))).map((x) => x.id);
+    const ran = SAMPLES.length - skipped.length;
+    // eslint-disable-next-line no-console
     console.warn(
-      `[real-docx] marker recall=${(metrics.tp / Math.max(1, metrics.tp + metrics.fn)).toFixed(3)} precision=${(metrics.tp / Math.max(1, metrics.det)).toFixed(3)}\n${metrics.rows.join("\n")}`
+      `[real-docx] ran=${ran}/${SAMPLES.length} skipped=${skipped.length ? skipped.join(",") : "none"} ` +
+        `marker recall=${(metrics.tp / Math.max(1, metrics.tp + metrics.fn)).toFixed(3)} precision=${(metrics.tp / Math.max(1, metrics.det)).toFixed(3)}\n${metrics.rows.join("\n")}`
     );
   });
 });

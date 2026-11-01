@@ -77,6 +77,36 @@ function multisetDiff(expected: Record<string, number>, actual: string[]): { tp:
 const rows: string[] = [];
 const agg = { markerTP: 0, markerFN: 0, detTotal: 0, errTP: 0, errFP: 0, errFN: 0, warnTP: 0, warnFP: 0, warnFN: 0, infoTP: 0, infoFP: 0, infoFN: 0, samples: 0 };
 
+describe("real-derived regression fixtures (committed; from public university templates)", () => {
+  // Entries extracted from the 北航/人大 templates (factual bibliographic data,
+  // attribution in docs/real-docx-validation.md). These run in CI: real-content
+  // coverage without redistributing the original template files.
+  it("R-D1 北航派生文献表: 15 entries parsed, body markers detected, order violation flagged", () => {
+    const bytes = readFileSync(join(ROOT, "corpus", "files", "R-D1-buaa-derived.docx"));
+    const r = analyzeDocx(bytes, "R-D1.docx", { version: "2025" });
+    expect(r.references.map((x) => x.index)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    expect(r.citations.map((c) => c.raw)).toEqual(["[2]", "[3, 6-9]"]);
+    expect(r.issues.some((i) => i.ruleId === "RR-CIT-004" && i.severity === "error")).toBe(true);
+    // new v1.1 rules on real compressed entries:
+    // RR-FMT-013 must NOT flag J/R/P/S/D-OL (audit fix); DS/PP/EB all have cited dates
+    expect(r.issues.filter((i) => i.ruleId === "RR-FMT-013")).toEqual([]);
+    // RR-FMT-018 must not flag the compressed 'GB/T20090.16—2016' standard number
+    expect(r.issues.filter((i) => i.ruleId === "RR-FMT-018" && i.detail.includes("[13]"))).toEqual([]);
+    // uncited entries (9 of 15) → info only
+    expect(r.issues.filter((i) => i.ruleId === "RR-REF-011")).toHaveLength(9);
+  });
+
+  it("R-D2 人大派生文献表: empty slots parsed, zero false positives on non-citations", () => {
+    const bytes = readFileSync(join(ROOT, "corpus", "files", "R-D2-ruc-derived.docx"));
+    const r = analyzeDocx(bytes, "R-D2.docx", { version: "2025" });
+    expect(r.references.map((x) => x.index)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(r.citations).toEqual([]);
+    const errors = r.issues.filter((i) => i.severity === "error");
+    expect(errors).toEqual([]);
+    expect(r.issues.filter((i) => i.ruleId === "RR-REF-011")).toHaveLength(6);
+  });
+});
+
 describe("external corpus validation (independent annotations)", () => {
   for (const a of loadAnnotations()) {
     it(`${a.id} ${a.title}`, () => {
