@@ -91,3 +91,11 @@ squeezed three-column layout, graph scales to container width.
 `ui-walkthrough.mjs` (full UI pass with screenshots), `pdf-verify.mjs`,
 `offline-test.mjs`, `gen-icons.mjs`, `capture-docs-shots.mjs`. Run them
 against a local preview build (`pnpm build && pnpm preview`).
+
+`scripts/pwa-update-offline-check.mjs` (V1.1.1) is the reproducible PWA update
+check: `pnpm build && node scripts/pwa-update-offline-check.mjs`. It installs the
+worker, bumps only `dist/sw.js` (a gitignored build output, restored on exit),
+and asserts the banner, the cache migration, the eviction of the previous
+version’s cache, and that analysis + HTML export still work offline — ten
+checks, all passing on the V1.1.1 branch. It changes nothing under version
+control.

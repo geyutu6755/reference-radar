@@ -267,14 +267,18 @@ a partial part.
 | Production build | `pnpm build` | ok |
 | Dependency audit | `pnpm audit --prod`, `--audit-level moderate` | 0 vulnerabilities |
 | Live site (pre-change baseline) | `node scripts/live-verify.mjs` | 7/7 steps, no page errors, deployed sw = rr-v1.1.0 |
+| PWA update + offline (V1.1.1) | `node scripts/pwa-update-offline-check.mjs` | 10/10 checks: precache complete, shell cached, banner on byte-diff, caches migrate, previous version evicted, offline analysis + HTML export, no page errors |
 | Stress sample | `pnpm test` | 1223 blocks / 202 markers / 150 refs, 221 ms |
 | External corpus | `pnpm test` | marker P/R 1.000, 0 FP across 21 sample-version runs |
 
 ### Not verified in this round (recorded honestly)
 
-- The service-worker precache-refusal change is verified by inspection and by
-  the existing offline E2E still passing; no test forces a partial precache
-  failure, because that needs two builds in one browser session.
+- The service worker’s **normal** update path is proven end to end by
+  `scripts/pwa-update-offline-check.mjs`. The new **refusal** path — an
+  incomplete precache must fail the install and leave the old worker serving
+  offline — is not forced by any test, because it needs two conflicting builds
+  in one browser session; it rests on code inspection plus the fact that the
+  complete-precache case still activates correctly.
 - GitHub Actions run history could not be queried from this machine (`gh`
   absent; `api.github.com` blocked/rate-limited), so CI status on the fix branch
   is not asserted here — it must be green on the merge commit before any tag.
