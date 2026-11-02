@@ -23,6 +23,13 @@ const DATE_PARTS = /^\s*(\d{4})\s*[./年-]\s*(\d{1,2})\s*[./月-]\s*(\d{1,2})\s*
 /** Exactly-four-digit candidates, boundaries not consumed so matches can abut. */
 const YEAR_CANDIDATE = /(?:^|[^0-9A-Za-z])(\d{4})(?=[^0-9A-Za-z]|$)/g;
 const PLAUSIBLE_YEAR = /^(1[5-9]\d{2}|20\d{2}|2100)$/;
+/**
+ * A four-digit run joined by a dash to another *plausible* year is one end of a
+ * span, not a publication year. The plausibility test both ways is what keeps
+ * “GB/T 7714—2025” (number then year) from being read as a span.
+ */
+const RANGE_AFTER = /^\s*[-–—]\s*(?:1[5-9]\d{2}|20\d{2}|2100)(?![0-9])/;
+const RANGE_BEFORE = /(?:^|[^0-9A-Za-z])(?:1[5-9]\d{2}|20\d{2}|2100)[-–—]\s*$/;
 
 /** Range tail keeping the separator as printed (～ — – included). */
 const PAGES_RANGE_TAIL = /[:：]\s*(\d{1,5})\s*([-–—～~])\s*(\d{1,5})\s*[.。]?\s*$/;
@@ -69,13 +76,20 @@ function findCitedDateSlot(raw: string): string | undefined {
 
 /**
  * First four-digit group that can plausibly be a publication year.
- * Standard numbers such as “GB/T 7714—2025” must not yield 7714 (V1.1.1).
+ * Standard numbers such as “GB/T 7714—2025” must not yield 7714, and a coverage
+ * span in a title (“1901—2024 年中国…数据集”) is not a publication year either.
  */
 function firstPlausibleYear(raw: string): string | undefined {
   YEAR_CANDIDATE.lastIndex = 0;
   let m: RegExpExecArray | null;
   while ((m = YEAR_CANDIDATE.exec(raw)) !== null) {
-    if (PLAUSIBLE_YEAR.test(m[1]!)) return m[1];
+    const value = m[1]!;
+    if (!PLAUSIBLE_YEAR.test(value)) continue;
+    const digitsStart = m.index + m[0].length - 4;
+    const after = raw.slice(digitsStart + 4);
+    const before = raw.slice(0, digitsStart);
+    if (RANGE_AFTER.test(after) || RANGE_BEFORE.test(before)) continue; // part of a span
+    return value;
   }
   return undefined;
 }

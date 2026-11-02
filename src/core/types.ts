@@ -58,6 +58,12 @@ export interface ParseNote {
     | "endnote-field"
     | "auto-numbered"
     | "multi-paragraph-entry"
+    /**
+     * More unlabeled blocks followed than a single entry can plausibly be:
+     * segmentation (usually lost auto-numbering) stopped rather than swallowing
+     * the rest of the list silently.
+     */
+    | "entry-merge-suspect"
     | "image-formula"
     | "hyperlink"
     | "unsupported-structure";

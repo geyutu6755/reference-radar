@@ -11,7 +11,11 @@
 import { Unzip, UnzipInflate } from "fflate";
 import { DocxLimitsError, LIMITS, validateEntryName } from "./limits";
 
-type Caps = typeof LIMITS;
+/**
+ * Caps an unpack run obeys. Structural (plain numbers) rather than the literal
+ * type of LIMITS so a test can pass a smaller budget.
+ */
+export type UnpackCaps = { readonly [K in keyof typeof LIMITS]: number };
 
 export interface UnpackedDocx {
   /** entry name → bytes (text entries are decoded later, on demand) */
@@ -57,7 +61,7 @@ function corrupt(reason?: unknown): DocxLimitsError {
   );
 }
 
-export function unpackDocx(bytes: Uint8Array, caps: Caps = LIMITS): UnpackedDocx {
+export function unpackDocx(bytes: Uint8Array, caps: UnpackCaps = LIMITS): UnpackedDocx {
   // Declared sizes: a cheap pre-rejection for honest archives that are simply too big.
   prescanZipSizes(bytes, caps);
 
@@ -158,7 +162,7 @@ const decoder = new TextDecoder("utf-8", { fatal: false });
  * parts, or undefined when the directory cannot be parsed (the streaming
  * unpacker then reports the damage).
  */
-export function prescanZipSizes(bytes: Uint8Array, caps: Caps = LIMITS): number | undefined {
+export function prescanZipSizes(bytes: Uint8Array, caps: UnpackCaps = LIMITS): number | undefined {
   // Locate End Of Central Directory (EOCD) signature 0x06054b50 from the end.
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let eocd = -1;

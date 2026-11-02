@@ -296,6 +296,71 @@ describe("fix preview safety (real DOCX bytes)", () => {
   });
 });
 
+describe("V1.1.1 parse-layer regressions (real DOCX bytes)", () => {
+  it("reads a publication year, not a standard number or a coverage span", () => {
+    const standard = analyzeEntries(["GB/T 7714—2025 信息与文献 参考文献著录规则[S]."]);
+    expect(standard.references[0]!.fields.year).toBe("2025");
+
+    const dataset = analyzeEntries([
+      "彭守璋. 1901—2024 年中国 1 km 分辨率逐月降水量数据集[DS/OL]. 国家地球系统科学数据中心 (2025-07-07) [2025-07-15]. https://www.geodata.cn/x.",
+    ]);
+    expect(dataset.references[0]!.fields.year).toBe("2025");
+  });
+
+  it("keeps the superscript signal for a superscript marker written after plain text", () => {
+    const doc: TestDoc = {
+      paragraphs: [
+        { text: "上标引用论文", heading: 1 },
+        { runs: [{ text: "已有研究支持该结论" }, { text: "[1]", superscript: true }, { text: "，并见后续讨论。" }] },
+        { text: "参考文献", heading: 2 },
+        { text: "[1] 张三. 某文[J]. 学报, 2020, 1(2): 1-9." },
+      ],
+    };
+    const r = analyzeDocx(buildDocx(doc), "sup.docx", { version: "2025" });
+    expect(r.citations.length).toBe(1);
+    expect(r.citations[0]!.detection.signals).toContain("superscript");
+  });
+
+  it("discloses a list whose entries carry no recognizable number", () => {
+    const doc: TestDoc = {
+      paragraphs: [
+        { text: "切分失败论文", heading: 1 },
+        { text: "正文引用[1]与[2]。" },
+        { text: "参考文献", heading: 2 },
+        // No labels and no numbering information: nothing marks an entry boundary.
+        { text: "张三. 某文[J]. 学报, 2020, 1(2): 1-9." },
+        { text: "李四. 某文[J]. 学报, 2021, 2(3): 10-15." },
+        { text: "王五. 某文[J]. 学报, 2022, 3(4): 20-25." },
+      ],
+    };
+    const r = analyzeDocx(buildDocx(doc), "noseg.docx", { version: "2025" });
+    expect(r.references.length).toBe(0);
+    expect(r.parseWarnings.join(" ")).toContain("未能从该部分切分出任何条目");
+  });
+
+  it("caps continuation merging and says the list may be under-segmented", () => {
+    const doc: TestDoc = {
+      paragraphs: [
+        { text: "并入超限论文", heading: 1 },
+        { text: "正文引用[1]。" },
+        { text: "参考文献", heading: 2 },
+        { text: "[1] 张三. 某文[J]. 学报, 2020, 1(2): 1-9." },
+        // Unlabeled followers: two may be continuations, more is a failure.
+        { text: "李四. 某文[J]. 学报, 2021, 2(3): 10-15." },
+        { text: "王五. 某文[J]. 学报, 2022, 3(4): 20-25." },
+        { text: "赵六. 某文[J]. 学报, 2023, 4(5): 30-35." },
+        { text: "孙七. 某文[J]. 学报, 2024, 5(6): 40-45." },
+      ],
+    };
+    const r = analyzeDocx(buildDocx(doc), "merge.docx", { version: "2025" });
+    expect(r.references.length).toBe(1); // the rest is refused, not silently fused
+    expect(r.references[0]!.notes.some((n) => n.code === "entry-merge-suspect")).toBe(true);
+    expect(r.parseWarnings.join(" ")).toContain("未能可靠切分");
+    // A single absorbed continuation is still normal (wrapped entry), not suspect.
+    expect(r.references[0]!.notes.some((n) => n.code === "multi-paragraph-entry")).toBe(true);
+  });
+});
+
 describe("no regression in structural checks after field/rule changes", () => {
   it("still reports missing numbers, gaps and order violations", () => {
     const doc: TestDoc = {

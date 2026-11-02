@@ -14,6 +14,9 @@ function circledToNumber(ch: string): number | undefined {
   return undefined;
 }
 
+/** A genuine entry may wrap a couple of lines; more than that is a segmentation failure. */
+const MAX_CONTINUATIONS_PER_ENTRY = 2;
+
 export interface ParsedReferenceList {
   entries: ReferenceEntry[];
   /** Blocks consumed as continuation of multi-paragraph entries. */
@@ -27,6 +30,7 @@ export function parseReferenceEntries(
 ): ParsedReferenceList {
   const entries: ReferenceEntry[] = [];
   const continuationBlocks: number[] = [];
+  let pendingMerges = 0;
 
   for (let i = startIndex; i <= endIndex && i < blocks.length; i++) {
     const block = blocks[i]!;
@@ -68,9 +72,19 @@ export function parseReferenceEntries(
       // No label → continuation of the previous entry (multi-paragraph entry).
       const prev = entries[entries.length - 1];
       if (prev) {
+        if (pendingMerges >= MAX_CONTINUATIONS_PER_ENTRY) {
+          // A whole list arriving as unlabeled blocks (lost auto-numbering) must
+          // not be absorbed one entry at a time: stop, mark, let the pipeline
+          // disclose that numbering conclusions are unreliable (V1.1.1).
+          if (!prev.notes.some((n) => n.code === "entry-merge-suspect")) {
+            prev.notes.push({ code: "entry-merge-suspect" });
+          }
+          continue;
+        }
         prev.raw += " " + text;
         prev.notes.push({ code: "multi-paragraph-entry" });
         continuationBlocks.push(block.blockIndex);
+        pendingMerges++;
         continue;
       }
       // Entry-like prose before any numbered entry — skip but note.
@@ -78,6 +92,7 @@ export function parseReferenceEntries(
     }
 
     const { fields, confidence } = extractFields(raw);
+    pendingMerges = 0;
     entries.push({
       id: `ref-${entries.length}`,
       index,

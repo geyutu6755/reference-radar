@@ -8,10 +8,10 @@
  */
 import { describe, expect, it } from "vitest";
 import { zipSync, strToU8 } from "fflate";
-import { prescanZipSizes, unpackDocx } from "./unzip";
+import { prescanZipSizes, unpackDocx, type UnpackCaps } from "./unzip";
 import { DocxLimitsError, LIMITS } from "./limits";
 
-const caps = (over: Partial<typeof LIMITS>): typeof LIMITS => ({ ...LIMITS, ...over });
+const caps = (over: Partial<UnpackCaps>): UnpackCaps => ({ ...LIMITS, ...over });
 
 /**
  * Rewrite the declared uncompressed sizes (local headers + central directory)
