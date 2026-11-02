@@ -183,3 +183,100 @@ fabricate missing bibliographic content (no such capability exists in code).
 
 v1.1.0 Release target = HEAD = 93fbdd1 = deployed Pages build (CI + Deploy
 success); live sw.js serves rr-v1.1.0. Earlier tags (v1.0.0–v1.0.2) untouched.
+
+
+## V1.1.1 verification (2026-11-01, independent takeover)
+
+### Method
+
+Every claim below was produced by driving **real DOCX bytes** through the whole
+pipeline (`analyzeDocx(buildDocx(doc), …)`), not by injecting `fields`. A
+scratch probe outside the test suite first reproduced the defects end to end:
+an en-dash page range parsed to `pages:"24-33"`, a wave-dash range parsed to
+`pages:NONE`, a `[2025.1.15]` cited date parsed to `citedDate:NONE`, and a
+correct `[D]` entry parsed with `publisher:NONE, place:NONE`.
+
+### Standards re-verification (element tables read again, this session)
+
+| Type / table | Element | 必备性 | Clause | Used by |
+|---|---|---|---|---|
+| 网站 表10 | 引用日期 / 获取和访问路径 | 必备 / 必备 | 8.11.2.1 | RR-FMT-013 / 014 |
+| 网页 表11 | 引用日期 / 获取和访问路径 | 必备 / 必备 | 8.11.3.1 | RR-FMT-013 / 014 |
+| 数据集 表14 | 引用日期 / 获取和访问路径 | 必备 / **电子资源必备** | 8.14.2 | RR-FMT-013 / 014 |
+| 预印本 表15 | 引用日期 / 获取和访问路径 | 必备 / 必备 | 8.15.1 | RR-FMT-013 / 014 |
+| 学位论文 表6 | 学位授予单位 / 所在地 / 授予年 | 必备 / 有则必备 / 有则必备 | 8.7.1 | RR-FMT-015 |
+| 标准 表8 | 标准编号 / 文献类型标识 | 必备 / 必备但标准化文件中可选(注a) | 8.9.1 | RR-FMT-018 |
+| 连续出版物中的析出文献 表4 | 年卷期与页码等 / 引用日期 | 有则必备 / **不是该表元素** | 8.5.2 | RR-FMT-016 / 013 |
+| Annex A 表A.1 / 表A.2 | 17 type codes / 5 carrier codes | — | — | RR-FMT-008 |
+
+Consequences: the V1.1 narrowing of RR-FMT-013 is confirmed correct; RR-FMT-014’s
+dataset condition is carrier-based and 表A.2 lists MT/DK/CD/OL/MM **all** as
+electronic-resource carriers, so the only case where an unconditional URL check
+over-reaches is a `[DS]` entry with no carrier code at all. Clause strings shown
+to users were corrected to include 表11 and 表14.
+
+The code tables in `src/core/rules/tables.ts` match 表A.1/表A.2 item for item
+(17 + 5), verified line by line against the scan transcription.
+
+### Correction to the V1.1.0 record
+
+The section above states “Fix preview … verified for RR-FMT-011 (page separator)
+and RR-FMT-017 (date format)”. **That verification did not exist.** No test in
+the repository exercised either rule from document bytes, and the E2E suite
+never touched the preview UI; the claim rested on unit cases that inject
+`fields` by hand. Both rules were unreachable, so the feature was invisible to
+users. V1.1.1 adds the reachability gate and a clipboard E2E that reads the real
+clipboard and compares the whole corrected entry.
+
+### Defects reproduced before fixing (failing-first evidence)
+
+`src/core/rules/reachability.test.ts` against V1.1.0 code: **20 failed / 17
+passed (37)**. Failures by rule: RR-FMT-011 ×3, RR-FMT-013 ×1, RR-FMT-014 ×1,
+RR-FMT-015 ×3, RR-FMT-017 ×3, RR-FMT-018 ×9 (5 legal forms misreported as
+missing a number, plus 4 assertion failures on the missing-number cases).
+After the fix: **all pass**, with the 184 inherited tests unchanged and green.
+
+RR-FMT-018 was additionally checked with the standard-number pattern applied to
+every `[S]` example printed in the standard (scan lines 751-755, 1322-1331,
+1389-1390): 5 of 11 forms were reported as “missing standard number”, including
+`IEC/IEEE 61636-1: 2021`, `IEEE P802.11ba/D8.0—2020` and `AIAA G-136—2022`.
+All are accepted now; four no-number forms and a title containing “2020” still
+flag, which is the guard against over-widening.
+
+### Decompression boundary evidence
+
+`src/core/docx/bounds.test.ts` (9 cases) builds archives whose local **and**
+central-directory size fields were rewritten to claim ~1 byte while the deflate
+stream still inflates to hundreds of kilobytes. The declared-size pre-check
+accepts them (`prescanZipSizes` does not throw); `unpackDocx` rejects with
+`entry-too-large` / `total-too-large`, proving the cap is applied to bytes
+produced. Caps are injectable, so the tests stay in the kilobyte range instead
+of provoking a real out-of-memory condition. Also covered: stored (level 0)
+entries, entry storms, traversal names rejected before any inflation, a >1 MB
+part round-tripping byte-for-byte, and a truncated stream that must not publish
+a partial part.
+
+### Full gates on this branch
+
+| Check | Command | Result |
+|---|---|---|
+| TypeScript strict | `pnpm typecheck` | 0 errors |
+| ESLint | `pnpm lint` | 0 errors / 2 pre-existing warnings |
+| Unit + reachability + bounds | `pnpm test` | **239 passed / 0 failed** (14 files) |
+| E2E | `pnpm exec playwright test` | **14 passed / 4 skipped** (Chromium, Firefox, WebKit) |
+| Production build | `pnpm build` | ok |
+| Dependency audit | `pnpm audit --prod`, `--audit-level moderate` | 0 vulnerabilities |
+| Live site (pre-change baseline) | `node scripts/live-verify.mjs` | 7/7 steps, no page errors, deployed sw = rr-v1.1.0 |
+| Stress sample | `pnpm test` | 1223 blocks / 202 markers / 150 refs, 221 ms |
+| External corpus | `pnpm test` | marker P/R 1.000, 0 FP across 21 sample-version runs |
+
+### Not verified in this round (recorded honestly)
+
+- The service-worker precache-refusal change is verified by inspection and by
+  the existing offline E2E still passing; no test forces a partial precache
+  failure, because that needs two builds in one browser session.
+- GitHub Actions run history could not be queried from this machine (`gh`
+  absent; `api.github.com` blocked/rate-limited), so CI status on the fix branch
+  is not asserted here — it must be green on the merge commit before any tag.
+- No real user feedback was collected: the public repository shows 1 star, 0
+  forks and 0 issues, and all quality numbers above remain self-generated.

@@ -5,6 +5,35 @@
 a CI gate** (the files are not redistributable; the test skips silently when
 they are absent — `src/core/corpus/real-docx.test.ts`).
 
+## Corrections — conclusions later audits overturned (added 2026-11-01, V1.1.1)
+
+The text below is kept as recorded at the time. Three of its conclusions no
+longer hold and must be read with these corrections:
+
+1. **“联机条目缺引用日期警告 ×4”（R-01 预期，2025 版）— superseded by the V1.1
+   必备性 audit.** Cited date is 必备 only for 网站（表10）、网页（表11）、数据集
+   （表14）、预印本（表15）; the journal/report/patent/standard/thesis element
+   tables contain no cited-date element. The annotation in
+   `src/core/corpus/real-docx.test.ts` was corrected to assert **zero**
+   warning-level findings for R-01 under 2025.
+2. **“zero deterministic false positives” — narrower than it reads.** The study
+   compares `errors` / `warnings` / `infos` as exact sets, but review-level
+   findings only through `reviewsAtLeast` (a lower bound). A false positive at
+   `review` severity therefore could not be detected here. That is exactly how
+   RR-FMT-015 kept flagging the correctly formed `[D]` entry in both R-01 and
+   R-D1/R-D2 (“未见学位授予单位”) until V1.1.1 proved the fields it tested
+   (`publisher`/`place`) were never populated.
+3. **No entry-format finding of RR-FMT-011 / RR-FMT-017 could ever have appeared
+   in these documents.** Before V1.1.1 those two rules were unreachable from
+   real bytes (the field extractor normalised the separator and only accepted
+   already-ISO dates), so the study’s silence on page separators and date
+   formats is not evidence of correctness. V1.1.1 added
+   `src/core/rules/reachability.test.ts`, which drives DOCX bytes through the
+   whole pipeline; 20 of its 37 cases failed against the V1.1.0 code.
+
+Sample acquisition limits, licensing notes and the block/marker counts recorded
+below remain valid.
+
 ## Samples obtained (real documents, not synthetic)
 
 | ID | Document | Source | License / usage conditions |

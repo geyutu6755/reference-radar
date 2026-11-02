@@ -4,6 +4,96 @@ All notable changes are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [1.1.1] — unreleased (fix branch `fix/v1.1.1-false-positives`)
+
+Correctness release for the V1.1 entry-format work. **No new product features.**
+An independent takeover review found that V1.1.0 shipped rules which could not
+fire on a real `.docx`, and that two of them produced false positives — all with
+a green 184-test suite. Root cause: rule unit tests inject parsed `fields`
+directly, so they never exercise the extractor.
+
+### Fixed (P0 — false positives and unreachable rules)
+
+- **Field layer keeps what it was asked to police**: `pagesRaw` / `citedDateRaw`
+  preserve the printed page separator and printed cited date next to the
+  normalised values (`24～33`, `2025.1.15`).
+- **RR-FMT-011 and RR-FMT-017 are reachable again.** Before this release neither
+  could ever fire on a document: the separator was normalised away before the
+  rule read it, and the date pattern only accepted values already in ISO form.
+- **RR-FMT-013 contradiction removed**: an entry whose cited date is printed in
+  a non-ISO form was reported as “cited date missing” with high confidence —
+  the very class of false positive the V1.1 audit set out to eliminate. Presence
+  is now judged on the printed value, and the format problem is reported once by
+  RR-FMT-017.
+- **RR-FMT-015 stopped flagging correct thesis entries.** It tested
+  `publisher`/`place`, which the parser never assigned anywhere in the codebase,
+  so every properly formatted `[D]` entry (“武汉: 武汉大学, 2022: 87.”) was
+  reported as lacking its degree-granting unit. Publication info is now
+  extracted positionally from the 表6 format, so institutions naming neither
+  大学 nor 学院 are recognised too.
+- **RR-FMT-018 stopped flagging the standard’s own examples.** The number pattern
+  was anchored to the start of the entry and required digits right after the
+  organisation code, so `IEC/IEEE 61636-1: 2021`, `IEEE P802.11ba/D8.0—2020` and
+  `AIAA G-136—2022` (all printed in GB/T 7714—2025 itself) were reported as
+  missing a standard number. The pattern is now unanchored and covers part
+  numbers and group letters, and the finding asks for a manual check.
+
+### Fixed (P1)
+
+- **Copy corrected entry is honest.** Preview and clipboard are the same string
+  by construction (literal split/join, so `$&`-style sequences in a document
+  cannot expand); a span that occurs more than once, or resolves to no valid
+  date, now shows an explicit refusal (`fixBlocked`) instead of a copy button
+  that silently returns unchanged text.
+- **DOCX decompression is bounded during inflation, not after.** The previous
+  unpacker decompressed the whole archive first and checked sizes afterwards,
+  and its comment claimed aborts that did not exist; central-directory
+  declarations are attacker-controlled. Rewritten on fflate’s streaming `Unzip`
+  fed in 64 KiB slices with per-entry and cumulative caps applied to bytes as
+  they are produced. Only the seven parts the OOXML reader consumes are inflated
+  at all, so images/fonts/themes can no longer exhaust memory.
+
+### Fixed (P2)
+
+- RR-FMT-014’s displayed basis now cites the table that governs each type
+  (adds 8.11.3.1 表11 for 网页 and 8.14.2 表14 for 数据集) and honours 表14’s
+  “电子资源必备” condition instead of assuming it.
+- A rule that throws is no longer swallowed: the failure is reported through
+  `parseWarnings` into the scope panel and both report formats.
+- Service worker refuses to activate an incomplete precache, so a partially
+  failed deploy can no longer evict the working offline cache.
+- Reference lists that cannot be segmented (lost Word auto-numbering) stop
+  merging into one entry and disclose it; publication year is no longer read
+  from a standard number (“GB/T 7714—2025” → 2025, not 7714) or from a coverage
+  span in a title; superscript `[1]` markers keep their strongest signal.
+- Documentation corrected against the code: `limitations.md` (was still v1.0.0 /
+  “12 rule families”), `testing.md` results, README offline-export claim, and a
+  dated correction block in `real-docx-validation.md` for conclusions the V1.1
+  and V1.1.1 audits overturned.
+
+### Added (tests, not counts)
+
+- `src/core/rules/reachability.test.ts` — permanent gate driving DOCX bytes
+  through the whole pipeline for every RR-FMT rule (41 cases; 20 of them failed
+  against V1.1.0 code).
+- `src/core/docx/bounds.test.ts` — lying headers, stored entries, entry storms,
+  traversal names, truncated streams, exact round-trip of a >1 MB part.
+- Chromium E2E that reads the real clipboard and compares the whole corrected
+  entry verbatim, including the refusal path.
+- `src/core/rules/entry-requirements.ts` — the per-type element facts (element,
+  necessity, clause, table) each rule depends on, committed so the audit no
+  longer lives only in an unresearched local scan. The standard’s text is still
+  not redistributed.
+
+### Verified
+
+- 239 unit tests / 0 failed · 14 passed + 4 deliberately skipped E2E across
+  Chromium, Firefox and WebKit · typecheck 0 errors · lint 0 errors ·
+  `pnpm audit` 0 vulnerabilities · external corpus and stress sample
+  re-measured with no structural regression (marker P/R 1.000, 221 ms).
+
+
+
 ## [1.1.0] — 2026-11-01
 
 Professional entry-format checking: the tool now helps writers find and FIX
@@ -42,9 +132,13 @@ common bibliographic problems, not just numbering consistency. Rule count
 
 ### Verified
 
-- 185 tests (incl. per-rule positive/negative/legal-exception cases and the
-  real-derived fixtures), Playwright E2E, 0-vulnerability audit, long-document
-  UX screenshots.
+- 184 tests (recorded as “185 tests” when this section was written; 184 is what
+  the release commit measures), incl. per-rule positive/negative/legal-exception
+  cases and the real-derived fixtures, Playwright E2E, 0-vulnerability audit,
+  long-document UX screenshots. **Corrected in 1.1.1:** two of the five “new
+  rules” in this release could not fire on a real document, and one produced
+  false positives — see the 1.1.1 Fixed section and
+  [`docs/rule-coverage.md`](docs/rule-coverage.md).
 
 ## [1.0.2] — 2026-11-01
 

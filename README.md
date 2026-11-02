@@ -25,7 +25,11 @@ Upload a paper as **.docx** and Reference Radar — entirely in your browser, wi
 
 ## Online demo & offline app
 
-The [demo site](https://geyutu6755.github.io/reference-radar/) is a full PWA: install it from the browser menu and it keeps working **offline** — analysis and report export included. Papers never leave the browser tab.
+The [demo site](https://geyutu6755.github.io/reference-radar/) is a full PWA:
+install it from the browser menu and it keeps working **offline** — analysis and
+HTML export included. PDF export needs one prior online export on a fresh
+install, because the ~11 MB CJK font is deliberately not precached (see
+[`docs/limitations.md`](docs/limitations.md)). Papers never leave the browser tab.
 
 ## Screenshot tour
 
@@ -52,7 +56,14 @@ Rules are versioned per standard edition and every rule carries a source clause 
   generator, hand annotations) measures marker precision/recall and issue
   false positives — currently 1.000/1.000 with zero FPs; see
   [`docs/external-validation.md`](docs/external-validation.md).
-- Explicitly **not** implemented in v1.0: the author–year (著者-出版年制) style, per-type field-completeness rules for all new 2025 entry types, and full-standard compliance certification. Uncited entries are reported as *info*, never as violations. See [`docs/limitations.md`](docs/limitations.md).
+- Explicitly **not** implemented: the author–year (著者-出版年制) style, field
+  completeness for the remaining 2025 entry types (会议录/报告/档案/地图 等), and
+  full-standard compliance certification. Elements the standard marks 有则必备
+  (出版地、出版者、年卷期、页码…) are never reported as definite violations,
+  because absence cannot be distinguished from “not applicable” in entry text.
+  Uncited entries are reported as *info*, never as violations. See
+  [`docs/limitations.md`](docs/limitations.md) and the
+  [`docs/rule-coverage.md`](docs/rule-coverage.md) matrix.
 
 ## Why local-first?
 
@@ -103,9 +114,11 @@ Planned versions — nothing on this list is shipped yet; see
 - **v1.2 — wider document coverage.** Header/footer and text-box analysis,
   footnote-based reference-list (页下注文献表) consistency checks, and richer
   Zotero/Mendeley/EndNote field metadata parsing (beyond displayed text).
-- **v1.3 — deeper entry-format rules.** Field-completeness checks for the nine
-  entry types newly formalized in GB/T 7714—2025 (会议录/学位论文/报告/标准/
-  网站网页/档案/地图/数据集/预印本), grounded in verified clause tables.
+- **v1.3 — deeper entry-format rules.** Field-completeness checks for the entry
+  types still uncovered among those formalized in GB/T 7714—2025 (会议录/报告/
+  档案/地图 等), grounded in verified clause tables. 网站网页/数据集/预印本
+  (URL, cited date), 学位论文 (degree-granting unit) and 标准 (standard number)
+  shipped in v1.1 and were made reachable from real documents in v1.1.1.
 - **Later.** Standalone npm publication of the parser and rule engine; a
   rule-coverage expansion driven by verifiable sources.
 
