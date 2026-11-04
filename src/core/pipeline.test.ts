@@ -74,6 +74,20 @@ describe("analysis pipeline", () => {
     expect(r.issues.some((i) => i.ruleId === "RR-SCOPE-012")).toBe(true);
   });
 
+  it("links a citation to EVERY entry carrying a duplicate number (V1.1.2)", () => {
+    const r = analyze({
+      paragraphs: [
+        { text: "引用[2]。" },
+        { text: "参考文献", heading: 1 },
+        { text: "[2] 甲. 文献A[J]. 学报, 2020." },
+        { text: "[2] 乙. 文献B[M]. 出版社, 2021." },
+      ],
+    });
+    const rels = r.relations.filter((x) => x.number === 2 && !x.missing);
+    expect(rels).toHaveLength(2); // both duplicate entries stay connected
+    expect(new Set(rels.map((x) => x.referenceId)).size).toBe(2);
+  });
+
   it("does not misread table data numbers as citations", () => {
     const r = analyze({
       paragraphs: [{ text: "见表1。" }],

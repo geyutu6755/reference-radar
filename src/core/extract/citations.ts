@@ -18,6 +18,21 @@ const MATH_AFTER = /^\s*[=∈×÷≈≤≥±⊕∑∫]/;
 /** Words that strongly indicate a citation context. */
 const CITATION_VERB = /(?:文献|参见|参阅|见|如.{0,6}所示|所述|研究|报道|表明|指出|参考|依据|来源|摘自|et al)\s*$/;
 
+/**
+ * V1.1.2 plausibility bounds (P0: unbounded ranges).
+ *
+ * Real GB/T 7714 reference lists stay far below these limits; anything beyond
+ * them is a year range, a data label or a hostile input, and must not be
+ * expanded into citation numbers (which would flood the rule engine, the
+ * relation graph and the report).
+ */
+/** A bracket number above this is a year or data value, not a reference index. */
+export const MAX_PLAUSIBLE_REF_NUMBER = 999;
+/** A single range longer than this (e.g. [1-9999]) is not expanded. */
+export const MAX_RANGE_SPAN = 50;
+/** Total expanded numbers per document, to stop cumulative abuse. */
+export const MAX_TOTAL_EXPANSION = 5000;
+
 export function parseCitationContent(content: string, contentStart: number): {
   segments: CitationSegment[];
   numbers: number[];
@@ -70,6 +85,7 @@ export function extractCitations(blocks: DocBlock[]): ExtractResult {
   const citations: Citation[] = [];
   const entryLike: number[] = [];
   const firstSeen = new Map<number, number>();
+  let expandedTotal = 0; // cumulative expansion budget (V1.1.2 P0)
 
   for (const block of blocks) {
     // Headings are not citation sites (chapter numbers, caption labels).
@@ -168,6 +184,38 @@ export function extractCitations(blocks: DocBlock[]): ExtractResult {
       if (block.notes.some((n) => n.code === "hidden-text")) signals.push("block-has-hidden-text");
       if (block.notes.some((n) => n.code === "revised-deletion")) signals.push("block-has-revised-content");
 
+      // ---- V1.1.2 P0: plausibility bounds before anything downstream ----
+      let numbers = parsed.numbers;
+      // (a) Numbers above the plausibility bound are years or data values.
+      const implausible = numbers.filter((n) => n > MAX_PLAUSIBLE_REF_NUMBER);
+      if (implausible.length > 0) {
+        signals.push(`implausible-number>${MAX_PLAUSIBLE_REF_NUMBER}:${implausible.slice(0, 3).join(",")}`);
+        needsReview = true;
+        numbers = numbers.filter((n) => n <= MAX_PLAUSIBLE_REF_NUMBER);
+      }
+      // (b) Ranges longer than the span cap are not expanded (e.g. [1-9999]).
+      const overlong = parsed.segments.filter(
+        (seg) => seg.kind === "range" && seg.end - seg.start + 1 > MAX_RANGE_SPAN
+      );
+      if (overlong.length > 0) {
+        signals.push(`range-too-long:${overlong.map((s) => `${s.start}-${s.end}`).join(",")}`);
+        needsReview = true;
+        const dropped = new Set<number>();
+        for (const seg of overlong) {
+          for (let n = seg.start; n <= seg.end; n++) dropped.add(n);
+        }
+        numbers = numbers.filter((n) => !dropped.has(n));
+      }
+      // (c) Cumulative expansion budget: once exhausted, further ranges stay
+      // unexpanded and the marker is parked in the review queue.
+      const budgetLeft = Math.max(0, MAX_TOTAL_EXPANSION - expandedTotal);
+      if (numbers.length > budgetLeft) {
+        signals.push(`expansion-budget-exhausted:${numbers.length}>${budgetLeft}`);
+        needsReview = true;
+        numbers = [];
+      }
+      expandedTotal += numbers.length;
+
       const order = citations.length;
       const firstOccurrence: number[] = [];
       for (const n of parsed.numbers) {
@@ -179,7 +227,7 @@ export function extractCitations(blocks: DocBlock[]): ExtractResult {
       citations.push({
         id: `cit-${order}`,
         raw,
-        numbers: parsed.numbers,
+        numbers,
         segments: parsed.segments,
         anchor: {
           containerId: block.containerId,
