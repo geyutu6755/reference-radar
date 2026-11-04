@@ -1,4 +1,10 @@
-/** Security limits for DOCX processing. Conservative defaults, all enforced. */
+/**
+ * Security limits for DOCX processing. Conservative defaults.
+ *
+ * `maxCompressedBytes` is checked on the upload; the decompression caps are
+ * enforced against bytes the inflater actually produces (see unzip.ts), not on
+ * what a ZIP header claims — declared sizes only allow an earlier rejection.
+ */
 export const LIMITS = {
   /** Max compressed upload size (bytes): 20 MB. */
   maxCompressedBytes: 20 * 1024 * 1024,

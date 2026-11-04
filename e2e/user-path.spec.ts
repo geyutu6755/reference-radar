@@ -172,6 +172,73 @@ test.describe("negative: analysis worker unavailable", () => {
   });
 });
 
+test.describe("fix preview copy → clipboard (chromium only)", () => {
+  test.skip(({ browserName }) => browserName !== "chromium", "real clipboard read");
+
+  /** Entries built so the mechanical fixes are unambiguous except one. */
+  function fixPreviewBytes(): Uint8Array {
+    const doc: TestDoc = {
+      paragraphs: [
+        { text: "修改建议验证论文", heading: 1 },
+        { text: "正文依次引用[1]、[2]与[3]。" },
+        { text: "参考文献", heading: 1 },
+        { text: "[1] 张三. 某文[J]. 学报, 2020, 1(2): 24～33." },
+        { text: "[2] 某作者. 网页[EB/OL]. [2025.1.15]. https://example.org/a." },
+        // Same malformed date twice: the fix must refuse to guess a position.
+        { text: "[3] 某作者. 网页[EB/OL]. [2025.1.15][2025.1.15]. https://example.org/b." },
+      ],
+    };
+    return buildDocx(doc);
+  }
+
+  test("preview and clipboard agree verbatim; ambiguous span refuses to copy", async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/");
+    await page.setInputFiles('input[type="file"]', {
+      name: "fix-preview.docx",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      buffer: Buffer.from(fixPreviewBytes()),
+    });
+    await page.waitForSelector(".rr-wb", { timeout: 20_000 });
+
+    // The contradiction that shipped in V1.1.0 must not return: a printed but
+    // malformed cited date is a format finding only, never “element missing”.
+    await expect(page.locator(".rr-issue", { hasText: "RR-FMT-013" })).toHaveCount(0);
+    await expect(page.locator(".rr-issue", { hasText: "RR-FMT-011" }).first()).toBeVisible();
+    await expect(page.locator(".rr-issue", { hasText: "RR-FMT-017" }).first()).toBeVisible();
+
+    const pageFix = page.locator(".rr-issue", { hasText: "RR-FMT-011" }).first();
+    await expect(pageFix.locator(".rr-fixpreview__before")).toHaveText("24～33");
+    await expect(pageFix.locator(".rr-fixpreview__after")).toHaveText("24-33");
+    const expectedEntry = "[1] 张三. 某文[J]. 学报, 2020, 1(2): 24-33.";
+    await expect(pageFix.getByTestId("fix-full-entry")).toHaveText(expectedEntry);
+
+    await pageFix.getByRole("button", { name: "复制修改后条目" }).click();
+    // Read the real clipboard and compare the whole entry, not “differs”.
+    const clip1 = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clip1).toBe(expectedEntry);
+
+    const dateFix = page.locator(".rr-issue", { hasText: "RR-FMT-017" }).first();
+    const expectedDate = "[2] 某作者. 网页[EB/OL]. [2025-01-15]. https://example.org/a.";
+    await expect(dateFix.getByTestId("fix-full-entry")).toHaveText(expectedDate);
+    await dateFix.getByRole("button", { name: "复制修改后条目" }).click();
+    const clip2 = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clip2).toBe(expectedDate);
+    // Nothing outside the corrected span may be lost.
+    expect(clip2).toContain("某作者");
+    expect(clip2).toContain("https://example.org/a.");
+
+    // Ambiguous target: no copy affordance, and an explicit refusal instead of
+    // a success message about unchanged text.
+    const ambiguous = page.locator(".rr-issue").filter({ hasText: "RR-FMT-017" }).nth(1);
+    await expect(ambiguous.getByTestId("fix-unavailable")).toBeVisible();
+    await expect(ambiguous.getByRole("button", { name: "复制修改后条目" })).toHaveCount(0);
+  });
+});
+
 test.describe("offline PWA (chromium only)", () => {
   test.skip(({ browserName }) => browserName !== "chromium", "offline emulation via chromium");
 

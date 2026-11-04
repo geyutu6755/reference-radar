@@ -764,6 +764,7 @@ body {
 }
 .rr-fixpreview__before { color: var(--rr-danger); text-decoration: line-through; }
 .rr-fixpreview__after { color: var(--rr-ok); }
+.rr-fixpreview__full { color: var(--rr-ok); font-weight: 600; }
 .rr-fixpreview__actions {
   display: flex;
   gap: 8px;

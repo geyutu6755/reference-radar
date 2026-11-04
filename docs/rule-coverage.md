@@ -29,12 +29,12 @@ status and test status. **Partial coverage is not full-standard compliance.**
 | RR-FMT-008 | Type/carrier codes exist in the version's table | Annex A | Annex B | 2025 official / 2015 secondary | warning |
 | RR-FMT-010 | Missing type identifier → manual review | 6.2 / 7.3 | 7.2 / 8 | same | review |
 | RR-FMT-011 | Page ranges must use hyphen "-" (v1.0.1) | 6.2 | 7.2 | same | warning |
-| RR-FMT-013 | Cited date required — **v1.1 audit: only for 网站网页(表10)/数据集(表14)/预印本(表15)**; 2015: EB warning + other /OL review (8.4.4) | 8.11.2 表10 / 8.14 表14 / 8.15 表15 | 8.4.4 | same | warning / review |
-| RR-FMT-014 | EB/PP/DS entries require URL (v1.1) | 8.11.2 表10 / 8.15 表15 | — | official | warning |
-| RR-FMT-015 | [D] missing degree-granting institution → review (v1.1) | 8.7.1 表6 | 4.5 | same | review |
+| RR-FMT-013 | Cited date required — **only for 网站(表10)/网页(表11)/数据集(表14)/预印本(表15)**; an entry carrying a printed-but-malformed date is reported by RR-FMT-017 instead, never as “missing”. 2015: EB warning + other /OL review (8.4.4) | 8.11.2.1 表10 / 8.11.3.1 表11 / 8.14.2 表14 / 8.15.1 表15 | 8.4.4 | same | warning / review |
+| RR-FMT-014 | EB/PP/DS entries require URL — EB 表10+表11 and PP 表15 unconditionally, DS per 表14 “电子资源必备” (any 表A.2 carrier qualifies) (v1.1, basis corrected v1.1.1) | 8.11.2.1 表10 / 8.11.3.1 表11 / 8.14.2 表14 / 8.15.1 表15 | — | official | warning |
+| RR-FMT-015 | [D] missing degree-granting institution → review; institution read positionally from “授予地: 单位, 年”, so names without 大学/学院 are recognised (v1.1, parse fixed v1.1.1) | 8.7.1 表6 | 4.5 | same | review |
 | RR-FMT-016 | [J] without publication year → review; article number / online-first are legitimate (v1.1) | 8.5.1 / 8.5.2 表4 | 8.8 | same | review |
-| RR-FMT-017 | Cited date not YYYY-MM-DD → warning with mechanical fix preview (v1.1) | 7.6 | 8.4.4 | same | warning |
-| RR-FMT-018 | [S] without standard number → warning (v1.1); compressed "GB/T20090.16" form handled | 8.9.1 表8 | 4.4 | same | warning |
+| RR-FMT-017 | Cited date printed but not YYYY-MM-DD → warning **with mechanical fix preview**; unreadable values (e.g. 2025-13-45) warn without a preview (v1.1, reachable v1.1.1) | 7.6 | 8.4.4 | same | warning |
+| RR-FMT-018 | [S] without standard number → warning + manual check; recognises GB/T, IEC/IEEE, IEEE P…, AIAA G-…, ANSI/ANS-…, ISO/IEC …-…-…, part numbers and a responsible body before the number (v1.1, widened v1.1.1) | 8.9.1 表8 | 4.4 | same | warning |
 | RR-REF-011 | Uncited entries (info only, not a violation) | 9.2.2 | 10.1.2 | same | info |
 | RR-SCOPE-012 | No reference list found | 9.2 | 10.1 | same | warning |
 | RR-SCOPE-013 | Ambiguous bracketed markers → review queue | 9.2.1.2 | 10.1.1 | same | review |
@@ -65,6 +65,35 @@ Every 著录项目 table of GB/T 7714—2025 was read directly in the official s
 4. 2015 edition: the unified electronic-resource cited-date requirement
    (8.4.4, verified-secondary) applies, but non-EB findings are downgraded to
    review to avoid false certainty.
+
+## V1.1.1 reachability audit (2026-11-01)
+
+An independent takeover review found that rule-unit tests could pass while the
+rules themselves never fired, because the cases hand-inject `fields` and so
+bypass the extractor that produced (or destroyed) the data. The fix and its
+evidence:
+
+| Finding | Cause | Resolution |
+|---|---|---|
+| RR-FMT-011 could not fire on any real .docx | `fields.ts` normalised the page range to `a-b`, erasing the separator; `～`/`~` were not matched at all | keep `pagesRaw` verbatim; the rule reads it |
+| RR-FMT-017 could not fire | `citedDate` only accepted an already-ISO value | keep `citedDateRaw` as printed; preview derives ISO from it, or refuses |
+| RR-FMT-013 false positive on `[2025.1.15]` EB entries | presence test read the normalised field, so a printed date looked absent | presence now keyed on `citedDateRaw`; the format problem is reported once, by RR-FMT-017 |
+| RR-FMT-015 false positive on every correct `[D]` entry | `publisher`/`place` were declared in the type but assigned nowhere | positional extraction of “授予地: 单位, 年” (+ place-optional form for D); no institution keyword list |
+| RR-FMT-018 false positive on the standard’s own examples | regex anchored to entry start, suffix limited to 1–3 letters, digits required immediately after the org code | unanchored, `[-/]` joins, group letter, part dots; `requiresManualCheck` now true |
+| Fix preview could differ from what was copied | `String.replace` with document-derived text; silent no-op when the span was absent | rule emits a preview only for a span occurring exactly once; UI copies with split/join and shows `fixBlocked` when it must refuse |
+
+**Element facts are now in the repository**: `src/core/rules/entry-requirements.ts`
+records, per type, the element name, its 必备性, the clause and the element table
+that carries them (网站 表10 / 网页 表11 / 数据集 表14 / 预印本 表15 / 学位论文 表6 /
+标准 表8 / 期刊析出 表4), verified against the official scan. These are
+bibliographic facts; the standard’s text remains unredistributed and the scan
+stays outside the repo.
+
+**Permanent gate**: `src/core/rules/reachability.test.ts` drives DOCX bytes
+through unzip → OOXML → extraction → fields → rules → findings. Every RR-FMT
+rule has at least one case starting from real bytes, covering the correct-entry
+non-finding, the typical error, a legal exception, the uncertain downgrade, and
+per-version applicability. 20 of its 37 cases failed against V1.1.0 code.
 
 ## Version-specific code tables
 
@@ -103,9 +132,19 @@ for the 9 newly-formalized types (8.6–8.15). These are listed in the UI as
 ## Test status
 
 - Every rule carries executable test cases (`src/core/rules/*`), run by a
-  meta-test runner — a rule whose test cases fail fails the suite.
+  meta-test runner — a rule whose test cases fail fails the suite. **Since
+  V1.1.1 these cases are known to be necessary but not sufficient**: they inject
+  `fields` directly, so they cannot show whether a rule is reachable from a real
+  document. The reachability gate below is what covers that.
+- `src/core/rules/reachability.test.ts` — every RR-FMT rule exercised from DOCX
+  bytes, plus fix-preview safety and parse-layer regressions (37 + cases added
+  in V1.1.1).
+- `src/core/docx/bounds.test.ts` — decompression caps enforced on produced bytes
+  against archives with lying headers, stored entries, entry storms, traversal
+  names and truncated streams.
 - 18 golden samples (`src/core/golden/samples.ts`) with hand-authored
   expectations cover the requirement matrix (missing refs, duplicates, order,
   ranges, run-splitting, tables, auto-numbering, footnotes/endnotes, Zotero
   fields, non-citation brackets, missing lists, version differences, hostile
   inputs). Expectations are written independently of program output.
+- Current counts and commands: [testing.md](testing.md).

@@ -375,6 +375,9 @@ export function walkParagraph(p: OEntry, id: string): ParsedParagraph {
       "hyperlink",
       "formula",
       "inserted",
+      // superscript belongs here: coalescing a superscript “[1]” into the
+      // preceding plain run silently loses the strongest citation signal.
+      "superscript",
     ];
     return keys.every((k) => !!a[k] === !!b[k]);
   };

@@ -58,6 +58,12 @@ export interface ParseNote {
     | "endnote-field"
     | "auto-numbered"
     | "multi-paragraph-entry"
+    /**
+     * More unlabeled blocks followed than a single entry can plausibly be:
+     * segmentation (usually lost auto-numbering) stopped rather than swallowing
+     * the rest of the list silently.
+     */
+    | "entry-merge-suspect"
     | "image-formula"
     | "hyperlink"
     | "unsupported-structure";
@@ -146,10 +152,23 @@ export interface ReferenceFields {
   source?: string;
   volume?: string;
   issue?: string;
+  /** Page range normalised to the `24-33` shape. */
   pages?: string;
+  /**
+   * Page range exactly as printed (V1.1.1). Rules must read this, because the
+   * separator characters they police are erased by normalisation.
+   */
+  pagesRaw?: string;
   doi?: string;
   url?: string;
+  /** Cited date in `YYYY-MM-DD` form when the printed value can be determined. */
   citedDate?: string;
+  /**
+   * Cited date exactly as printed inside its square brackets (V1.1.1).
+   * Present-but-malformed must stay distinguishable from absent, otherwise a
+   * format problem is reported as a missing required element.
+   */
+  citedDateRaw?: string;
   publisher?: string;
   place?: string;
   edition?: string;
@@ -236,6 +255,12 @@ export interface Issue {
     replace: string;
     description: string;
   };
+  /**
+   * Why no mechanical fix is offered (ambiguous span, or the correct value is
+   * not derivable). Present instead of `fixPreview`, never alongside it, so a
+   * finding is never silent about the fix it deliberately refuses to guess.
+   */
+  fixBlocked?: string;
 }
 
 export interface RuleTestCase {

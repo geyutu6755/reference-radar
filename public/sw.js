@@ -6,7 +6,7 @@
  * - Never caches user documents or analysis results — everything the user
  *   uploads stays in memory only.
  */
-const VERSION = "rr-v1.1.0";
+const VERSION = "rr-v1.1.1";
 const PRECACHE = `${VERSION}-precache`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -15,7 +15,15 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(PRECACHE);
-      await Promise.allSettled(urls.map((u) => cache.add(new Request(u, { cache: "reload" }))));
+      const results = await Promise.allSettled(urls.map((u) => cache.add(new Request(u, { cache: "reload" }))));
+      const failed = results.filter((r) => r.status === "rejected").length;
+      const shell = (await cache.match("./")) || (await cache.match("./index.html"));
+      if (failed > 0 || !shell) {
+        // Rejecting the install is the point: this worker never activates, so
+        // `activate` cannot delete the previous version’s complete cache and
+        // leave offline users with a shell whose chunks are gone.
+        throw new Error(`precache incomplete: ${failed} of ${urls.length} assets failed (shell ${shell ? "ok" : "missing"})`);
+      }
       await self.skipWaiting();
     })()
   );

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runRules, allRules, rulesForVersion } from "./engine";
+import { runRules, allRules, rulesForVersion, ruleFailureWarning } from "./engine";
 import { RULES } from "./definitions";
 import type { Citation, ReferenceEntry, RuleContext } from "../types";
 
@@ -167,5 +167,28 @@ describe("structural rules", () => {
     expect(issues2015.filter((i) => i.ruleId === "RR-FMT-008")).toHaveLength(1);
     const issues2025 = runRules(ctx({ version: "2025", references: [ds] }));
     expect(issues2025.filter((i) => i.ruleId === "RR-FMT-008")).toHaveLength(0);
+  });
+
+  it("a rule that throws is reported, not silently dropped", () => {
+    const target = RULES.find((r) => r.ruleId === "RR-FMT-014")!;
+    const original = target.check;
+    target.check = () => {
+      throw new Error("injected rule failure");
+    };
+    try {
+      const warnings: string[] = [];
+      const eb = ref(1, "某作者. 网页[EB/OL]. [2025-01-15].");
+      eb.fields = { typeCode: "EB", carrierCode: "OL", citedDateRaw: "2025-01-15", citedDate: "2025-01-15" };
+      const issues = runRules(ctx({ references: [eb] }), (ruleId, error) =>
+        warnings.push(ruleFailureWarning(ruleId, error))
+      );
+      // The analysis still completes, but the missing check is disclosed.
+      expect(issues.filter((i) => i.ruleId === "RR-FMT-014")).toHaveLength(0);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain("RR-FMT-014");
+      expect(warnings[0]).toContain("injected rule failure");
+    } finally {
+      target.check = original;
+    }
   });
 });

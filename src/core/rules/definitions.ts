@@ -13,6 +13,8 @@
  */
 import type { Issue, ReferenceEntry, RuleContext, RuleDefinition } from "../types";
 import { codeTable, codesOnlyInOther } from "./tables";
+import { normalizeCitedDate } from "../references/fields";
+import { accessPathIsRequired, basisClause, citedDateIsRequired } from "./entry-requirements";
 
 /** Draft issue: engine assigns id + standardVersion. */
 type IssueDraft = Omit<Issue, "id" | "standardVersion">;
@@ -23,6 +25,21 @@ const SECONDARY_2015 = "verified-secondary" as const;
 function clauseFor(version: "2015" | "2025", c2025: string, c2015: string): string {
   return version === "2025" ? c2025 : c2015;
 }
+
+/** A cited date already in the prescribed form. */
+const ISO_CITED_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Standard-number shapes, verified against the 8.9.3 and Annex B examples of
+ * GB/T 7714—2025: an organisation code (optionally joined by “/” or “-”), an
+ * optional group letter, then the number with its part dots.
+ *   GB/T 7714  GB/T20090.16  IEC/IEEE 61636-1  IEEE P802.11ba  AIAA G-136
+ *   ANSI/ANS-5.1  ISO/IEC 80079-20-2  GB 3000.1
+ * Deliberately unanchored: a responsible body may precede the number. Lookbehind
+ * is avoided so the bundle stays parseable on older WebKit.
+ */
+const STANDARD_NUMBER =
+  /(?:^|[^A-Za-z])[A-Z]{2,6}(?:\s*[-/]\s*[A-Z]{1,6})*\s*[A-Z]?\s*[-\s]?\d[\d.]/;
 
 /* ------------------------------------------------------------------ */
 /* Helper predicates                                                   */
@@ -70,18 +87,41 @@ function levenshtein(a: string, b: string): number {
  * the date token inside the raw entry (zero-pad to YYYY-MM-DD). Returns
  * undefined when the date cannot be located mechanically.
  */
-function citedDateFixPreview(raw: string, date: string): { find: string; replace: string; description: string } | undefined {
-  const idx = raw.indexOf(date);
-  if (idx < 0) return undefined;
-  const m = /^(\d{4})[./年-](\d{1,2})[./月-](\d{1,2})日?$/.exec(date);
-  if (!m) return undefined;
-  const iso = `${m[1]}-${m[2]!.padStart(2, "0")}-${m[3]!.padStart(2, "0")}`;
-  const start = Math.max(0, idx - 1);
-  const end = Math.min(raw.length, idx + date.length + 1);
+/**
+ * A fix preview is offered only when the target span occurs exactly once in the
+ * text the user is about to copy: never absent, never ambiguous, never a no-op.
+ */
+function previewFrom(
+  anchorText: string,
+  find: string,
+  replace: string,
+  description: string
+): Issue["fixPreview"] | undefined {
+  if (!find || !replace || find === replace) return undefined;
+  const first = anchorText.indexOf(find);
+  if (first < 0) return undefined;
+  if (anchorText.indexOf(find, first + 1) !== -1) return undefined;
+  return { find, replace, description };
+}
+
+/**
+ * Either a safe mechanical fix, or an explicit statement of why none is
+ * offered: a finding must never be silent about a fix it refused to guess.
+ */
+function mechanicalFix(
+  anchorText: string,
+  find: string,
+  replace: string,
+  description: string
+): { fixPreview?: Issue["fixPreview"]; fixBlocked?: string } {
+  const preview = previewFrom(anchorText, find, replace, description);
+  if (preview) return { fixPreview: preview };
+  const occurrences = find.length > 0 ? anchorText.split(find).length - 1 : 0;
   return {
-    find: raw.slice(start, end),
-    replace: raw.slice(start, idx) + iso + raw.slice(idx + date.length, end),
-    description: `将引用日期 ${date} 规范化为 ${iso}`,
+    fixBlocked:
+      occurrences > 1
+        ? `原文中“${find}”出现 ${occurrences} 次，无法确定应修改哪一处，请手动修改。`
+        : `未能在原文条目中定位“${find}”，请手动修改。`,
   };
 }
 
@@ -689,33 +729,37 @@ export const RULES: RuleDefinition[] = [
     check: (ctx) => {
       const drafts: IssueDraft[] = [];
       for (const r of ctx.references) {
-        const pages = r.fields.pages;
+        // Read the printed span: the normalised `pages` no longer contains the
+        // separator this rule exists to police.
+        const pages = r.fields.pagesRaw;
         if (!pages) continue;
-        if (/^\d{1,5}\s*[-–—～~]\s*\d{1,5}$/.test(pages) && !/^\d{1,5}-\d{1,5}$/.test(pages)) {
-          drafts.push({
-            ruleId: "RR-FMT-011",
-            category: "entry-format",
-            severity: "warning",
-            messageKey: "issue.pagesDash",
-            messageParams: { index: r.index, pages },
-            detail: `参考文献 [${r.index}] 页码“${pages}”未使用短横线“-”连接起讫页码。`,
-            suggestion: "按著录用符号规定，将页码连接符改为半角短横线，如 24-33。",
-            fixPreview: {
-              find: pages,
-              replace: pages.replace(/[-–—～~]/, "-"),
-              description: `将页码连接符规范化为短横线（${pages} → ${pages.replace(/[-–—～~]/, "-")}）`,
-            },
-            anchors: [r.anchor],
-            source: {
-              clause: clauseFor(ctx.version, "6.2", "7.2"),
-              summary: "起讫页码间用短横线“-”连接。",
-              status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
-            },
-            confidence: "high",
-            requiresManualCheck: false,
-            relatedIds: [r.id],
-          });
-        }
+        const range = /^(\d{1,5})\s*([-–—～~])\s*(\d{1,5})$/.exec(pages);
+        if (!range || range[2] === "-") continue;
+        const normalized = `${range[1]}-${range[3]}`;
+        drafts.push({
+          ruleId: "RR-FMT-011",
+          category: "entry-format",
+          severity: "warning",
+          messageKey: "issue.pagesDash",
+          messageParams: { index: r.index, pages },
+          detail: `参考文献 [${r.index}] 页码“${pages}”未使用短横线“-”连接起讫页码。`,
+          suggestion: "按著录用符号规定，将页码连接符改为半角短横线，如 24-33。",
+          ...mechanicalFix(
+            r.anchor.text,
+            pages,
+            normalized,
+            `将页码连接符规范化为短横线（${pages} → ${normalized}）`
+          ),
+          anchors: [r.anchor],
+          source: {
+            clause: clauseFor(ctx.version, "6.2", "7.2"),
+            summary: "起讫页码间用短横线“-”连接。",
+            status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
+          },
+          confidence: "high",
+          requiresManualCheck: false,
+          relatedIds: [r.id],
+        });
       }
       return drafts;
     },
@@ -724,7 +768,12 @@ export const RULES: RuleDefinition[] = [
         name: "wave-dash page range flagged",
         input: {
           references: [
-            { id: "r1", index: 1, raw: "张三. 某文[J]. 学报, 2020, 1(2): 24～33.", fields: { pages: "24～33" } },
+            {
+              id: "r1",
+              index: 1,
+              raw: "张三. 某文[J]. 学报, 2020, 1(2): 24～33.",
+              fields: { pages: "24-33", pagesRaw: "24～33" },
+            },
           ],
         },
         expect: { issueCount: 1, detailIncludes: ["24～33"], severity: "warning" },
@@ -733,7 +782,7 @@ export const RULES: RuleDefinition[] = [
         name: "hyphen page range passes",
         input: {
           references: [
-            { id: "r1", index: 1, raw: "张三. 某文[J]. 学报, 2020, 1(2): 24-33.", fields: { pages: "24-33" } },
+            { id: "r1", index: 1, raw: "张三. 某文[J]. 学报, 2020, 1(2): 24-33.", fields: { pages: "24-33", pagesRaw: "24-33" } },
           ],
         },
         expect: { issueCount: 0 },
@@ -747,23 +796,26 @@ export const RULES: RuleDefinition[] = [
     category: "entry-format",
     severity: "warning",
     source: {
-      clause: "8.11.2 表10 / 8.14 表14 / 8.15 表15",
+      clause: "8.11.2.1 表10 / 8.11.3.1 表11 / 8.14.2 表14 / 8.15.1 表15",
       priorClause: "8.4.4",
       summary:
-        "引用日期为必备著录项目的类型：网站网页（表10）、数据集（表14）、预印本（表15）。其他类型的著录项目表不含引用日期项（如期刊析出表4、报告表7、专利表9、标准表8、学位论文表6），其联机形式按各自表格无引用日期要求。",
+        "引用日期为必备著录项目的类型：网站（表10）、网页（表11）、数据集（表14）、预印本（表15）。其他类型的著录项目表不含引用日期项（如期刊析出表4、图书表1、报告表7、专利表9、标准表8、学位论文表6），其联机形式按各自表格无引用日期要求。",
       status: OFFICIAL_2025,
     },
     explanation:
-      "引用日期的必备性因文献类型而异（v1.1 审计修正）：网站网页、数据集、预印本缺引用日期按警告处理；期刊、图书、学位论文、报告、专利、标准等类型的联机条目不检查引用日期（标准自身示例亦无）。2015 版将引用日期作为电子资源统一要求，故其他 /OL 类型在 2015 下降为待复核。",
+      "引用日期的必备性因文献类型而异（v1.1 审计修正，v1.1.1 补网页表11）：网站网页、数据集、预印本缺引用日期按警告处理；期刊、图书、学位论文、报告、专利、标准等类型的联机条目不检查引用日期（标准自身示例亦无）。条目已著录但格式不规范时改由格式检查提示，不再重复报“缺引用日期”。2015 版将引用日期作为电子资源统一要求，故其他 /OL 类型在 2015 下降为待复核。",
     suggestedFix: "为条目补充引用日期 [YYYY-MM-DD]。",
     check: (ctx) => {
       const drafts: IssueDraft[] = [];
       for (const r of ctx.references) {
-        if (r.fields.citedDate) continue;
+        // A printed date — even a badly formatted one — means the element is
+        // present. Reporting “missing cited date” on such an entry is the exact
+        // contradiction RR-FMT-017 exists to resolve (V1.1.1).
+        if (r.fields.citedDateRaw !== undefined) continue;
         const code = r.fields.typeCode ?? "";
-        // 2025: 引用日期必备 = EB(表10) + DS(表14) + PP(表15)
+        // 2025: 引用日期必备 = EB(表10/表11) + DS(表14) + PP(表15)
         if (ctx.version === "2025") {
-          if (!["EB", "DS", "PP"].includes(code)) continue;
+          if (!citedDateIsRequired(ctx.version, code)) continue;
           drafts.push({
             ruleId: "RR-FMT-013",
             category: "entry-format",
@@ -772,11 +824,11 @@ export const RULES: RuleDefinition[] = [
             messageParams: { index: r.index },
             detail: `参考文献 [${r.index}] 为${
               code === "EB" ? "网站、网页" : code === "DS" ? "数据集" : "预印本"
-            }类文献，引用日期为必备著录项目，但未见 [YYYY-MM-DD] 形式的引用日期。`,
+            }类文献，引用日期为必备著录项目，但条目中未见引用日期。`,
             suggestion: "补充引用日期，如 [2025-01-15]。",
             anchors: [r.anchor],
             source: {
-              clause: "8.11.2 表10 / 8.14 表14 / 8.15 表15",
+              clause: basisClause(ctx.version, "citedDate", code, "8.11.2.1 表10 / 8.14.2 表14 / 8.15.1 表15"),
               summary: "网站网页、数据集、预印本的引用日期为必备项。",
               status: OFFICIAL_2025,
             },
@@ -882,7 +934,7 @@ export const RULES: RuleDefinition[] = [
               id: "r1",
               index: 1,
               raw: "某中心. 数据集[DS/OL]. 平台, 2024-01-01[2025-01-01]. https://example.com.",
-              fields: { typeCode: "DS", carrierCode: "OL", typeIdentifier: "[DS/OL]", citedDate: "2025-01-01" },
+              fields: { typeCode: "DS", carrierCode: "OL", typeIdentifier: "[DS/OL]", citedDateRaw: "2025-01-01", citedDate: "2025-01-01" },
             },
           ],
         },
@@ -897,19 +949,19 @@ export const RULES: RuleDefinition[] = [
     category: "entry-format",
     severity: "warning",
     source: {
-      clause: "8.11.2 表10 / 8.15 表15",
+      clause: "8.11.2.1 表10 / 8.11.3.1 表11 / 8.14.2 表14 / 8.15.1 表15",
       summary:
-        "网站网页与预印本的获取和访问路径为必备著录项目；数据集（表14）的获取路径为电子资源必备。",
+        "获取和访问路径为必备著录项目：网站（表10）、网页（表11）、预印本（表15）无条件必备；数据集（表14）为电子资源必备。",
       status: OFFICIAL_2025,
     },
     explanation:
-      "网站、网页与预印本必须著录获取和访问路径（URL）。缺失时读者无法定位该资源。",
+      "网站、网页、预印本必须著录获取和访问路径（URL）；数据集按表14 在作为电子资源时必备（表A.2 的 MT/DK/CD/OL/MM 均为电子资源载体）。缺失时读者无法定位该资源。",
     suggestedFix: "补充资源的获取和访问路径（URL）。",
     check: (ctx) => {
       const drafts: IssueDraft[] = [];
       for (const r of ctx.references) {
         const code = r.fields.typeCode ?? "";
-        if (!["EB", "PP", "DS"].includes(code)) continue;
+        if (!accessPathIsRequired(ctx.version, code, r.fields.carrierCode)) continue;
         if (r.fields.url) continue;
         drafts.push({
           ruleId: "RR-FMT-014",
@@ -923,8 +975,10 @@ export const RULES: RuleDefinition[] = [
           suggestion: "补充资源的获取和访问路径（URL）。",
           anchors: [r.anchor],
           source: {
-            clause: "8.11.2 表10 / 8.15 表15",
-            summary: "网站网页与预印本的获取和访问路径为必备。",
+            clause: basisClause(ctx.version, "accessPath", code, "8.11.2.1 表10 / 8.14.2 表14 / 8.15.1 表15"),
+            summary: `${
+              code === "EB" ? "网站、网页" : code === "DS" ? "数据集（电子资源）" : "预印本"
+            }的获取和访问路径为必备。`,
             status: OFFICIAL_2025,
           },
           confidence: "high",
@@ -1102,27 +1156,39 @@ export const RULES: RuleDefinition[] = [
     check: (ctx) => {
       const drafts: IssueDraft[] = [];
       for (const r of ctx.references) {
-        const d = r.fields.citedDate;
-        if (!d) continue;
-        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+        // Compare the printed value: `citedDate` is already normalised, so
+        // testing it could never reveal a format problem (V1.1.1).
+        const printed = r.fields.citedDateRaw;
+        if (printed === undefined) continue;
+        const iso = normalizeCitedDate(printed);
+        // Well-shaped AND resolvable is the only clean state: “2025-13-45” has
+        // the ISO shape but no such date, which is neither valid nor absent.
+        if (ISO_CITED_DATE.test(printed) && iso !== undefined) continue;
+        const resolvable = iso !== undefined;
         drafts.push({
           ruleId: "RR-FMT-017",
           category: "entry-format",
           severity: "warning",
           messageKey: "issue.citedDateFormat",
-          messageParams: { index: r.index, date: d },
-          detail: `参考文献 [${r.index}] 的引用日期“${d}”不符合 YYYY-MM-DD 格式。`,
-          suggestion: "将引用日期改为 YYYY-MM-DD 格式，如 [2025-01-15]。",
+          messageParams: { index: r.index, date: printed },
+          detail: resolvable
+            ? `参考文献 [${r.index}] 的引用日期“${printed}”不符合 YYYY-MM-DD 格式。`
+            : `参考文献 [${r.index}] 的引用日期“${printed}”无法解析为有效日期，请核对。`,
+          suggestion: resolvable
+            ? "将引用日期改为 YYYY-MM-DD 格式，如 [2025-01-15]。"
+            : "核对并补充正确的引用日期，格式为 [YYYY-MM-DD]。",
           anchors: [r.anchor],
           source: {
             clause: clauseFor(ctx.version, "7.6", "8.4.4"),
-            summary: "引用日期应按 YYYY-MM-DD 格式著录。",
+            summary: "引用日期应按 YYYY-MM-DD 格式、用阿拉伯数字著录。",
             status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
           },
           confidence: "high",
-          requiresManualCheck: false,
+          requiresManualCheck: !resolvable,
           relatedIds: [r.id],
-          fixPreview: citedDateFixPreview(r.raw, d),
+          ...(iso !== undefined
+            ? mechanicalFix(r.anchor.text, printed, iso, `将引用日期 ${printed} 规范化为 ${iso}`)
+            : { fixBlocked: `引用日期“${printed}”不是有效日期，无法确定正确值，请手动核对。` }),
         });
       }
       return drafts;
@@ -1132,7 +1198,7 @@ export const RULES: RuleDefinition[] = [
         name: "non-ISO cited date flagged",
         input: {
           references: [
-            { id: "r1", index: 1, raw: "某作者. 网页[EB/OL]. [2025.1.15]. https://example.org.", fields: { typeCode: "EB", citedDate: "2025.1.15" } },
+            { id: "r1", index: 1, raw: "某作者. 网页[EB/OL]. [2025.1.15]. https://example.org.", fields: { typeCode: "EB", citedDateRaw: "2025.1.15", citedDate: "2025-01-15" } },
           ],
         },
         expect: { issueCount: 1, severity: "warning" },
@@ -1141,7 +1207,7 @@ export const RULES: RuleDefinition[] = [
         name: "ISO cited date passes",
         input: {
           references: [
-            { id: "r1", index: 1, raw: "某作者. 网页[EB/OL]. [2025-01-15]. https://example.org.", fields: { typeCode: "EB", citedDate: "2025-01-15" } },
+            { id: "r1", index: 1, raw: "某作者. 网页[EB/OL]. [2025-01-15]. https://example.org.", fields: { typeCode: "EB", citedDateRaw: "2025-01-15", citedDate: "2025-01-15" } },
           ],
         },
         expect: { issueCount: 0 },
@@ -1161,15 +1227,13 @@ export const RULES: RuleDefinition[] = [
       status: OFFICIAL_2025,
     },
     explanation:
-      "标准文献条目以标准编号开头（如 GB/T 7714—2025、ISO 3166）。[S] 条目若不以标准编号形态开头，通常缺少编号。",
+      "标准文献条目应著录标准编号（表8 必备），通常形如 GB/T 7714—2025、IEC/IEEE 61636-1、IEEE P802.11ba、AIAA G-136、ANSI/ANS-5.1。编号置于条目开头，但责任者写在编号之前同样能识别到编号，不判为缺失。",
     suggestedFix: "在条目开头补充标准编号，如 “GB/T 7714—2025 信息与文献 参考文献著录规则[S].”",
     check: (ctx) => {
       const drafts: IssueDraft[] = [];
       for (const r of ctx.references) {
         if (r.fields.typeCode !== "S") continue;
-        // Standard-number shape: GB/T 7714—2025, NB/T 10386—2020, ISO 3166, IEC/IEEE 61636-1: 2021
-        const hasNumber = /^\s*[A-Z]{2,6}(?:\/[A-Z]{1,3})?\s*\d/.test(r.raw);
-        if (hasNumber) continue;
+        if (STANDARD_NUMBER.test(r.raw)) continue;
         drafts.push({
           ruleId: "RR-FMT-018",
           category: "entry-format",
@@ -1184,8 +1248,9 @@ export const RULES: RuleDefinition[] = [
             summary: "标准文献应著录标准编号（必备）。",
             status: ctx.version === "2025" ? OFFICIAL_2025 : SECONDARY_2015,
           },
+          // Number shapes vary widely; a negative finding always deserves a look.
           confidence: "medium",
-          requiresManualCheck: false,
+          requiresManualCheck: true,
           relatedIds: [r.id],
         });
       }

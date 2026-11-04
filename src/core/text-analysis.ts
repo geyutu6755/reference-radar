@@ -7,7 +7,7 @@ import { extractCitations } from "./extract/citations";
 import { applyReferenceRegion, detectReferenceSection } from "./references/detect";
 import { parseReferenceEntries } from "./references/parse";
 import { buildRelations } from "./graph/relations";
-import { runRules } from "./rules/engine";
+import { ruleFailureWarning, runRules } from "./rules/engine";
 
 export function analyzeText(text: string, fileName: string, options: { version: StandardVersion }): AnalysisResult {
   const blocks: DocBlock[] = [];
@@ -48,7 +48,11 @@ export function analyzeText(text: string, fileName: string, options: { version: 
     referenceSectionTitle: section?.title,
   };
 
-  const issues = runRules({ version: options.version, citations, references, relations, blocks, notes: [], scope });
+  const ruleWarnings: string[] = [];
+  const issues = runRules(
+    { version: options.version, citations, references, relations, blocks, notes: [], scope },
+    (ruleId, error) => ruleWarnings.push(ruleFailureWarning(ruleId, error))
+  );
 
   return {
     fileName,
@@ -72,6 +76,6 @@ export function analyzeText(text: string, fileName: string, options: { version: 
       infoCount: issues.filter((i) => i.severity === "info").length,
     },
     scope,
-    parseWarnings: [],
+    parseWarnings: ruleWarnings,
   };
 }
