@@ -73,7 +73,8 @@ function drawText(
   }
 }
 
-function wrap(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+/** Exported for tests. */
+export function wrap(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
   const out: string[] = [];
   let line = "";
   for (const ch of text) {
@@ -250,8 +251,31 @@ async function fetchFont(): Promise<Uint8Array> {
   const base = import.meta.env.BASE_URL ?? "/";
   const url = `${base}fonts/NotoSansSC-Subset.otf`.replace(/([^:]\/)\/+/g, "$1");
   if (!fontCache) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`字体加载失败 / Font fetch failed: ${res.status}`);
+    // 1) normal network fetch (first export online, HTTP cache helps);
+    // 2) offline: the service worker should answer from a cache — but if the
+    //    page is not controlled by a SW (failed install under a flaky network)
+    //    or the SW misses, fall back to searching EVERY Cache API entry. This
+    //    is what the production offline-export failure traced back to (V1.1.2).
+    let res: Response | undefined;
+    try {
+      const r = await fetch(url);
+      if (r.ok) res = r;
+    } catch {
+      /* offline or uncontrolled — fall through to cache lookup */
+    }
+    if (!res) {
+      try {
+        res = (await caches.match(url)) ?? undefined;
+      } catch {
+        /* Cache API unavailable — nothing more we can do */
+      }
+    }
+    if (!res) {
+      throw new Error(
+        "无法获取中文字体（离线且本地缓存中不存在）。请联网导出一次以缓存字体，或改用 HTML 报告。 " +
+          "/ Could not load the CJK font (offline and not cached). Export once while online, or use the HTML report."
+      );
+    }
     fontCache = await res.arrayBuffer();
   }
   return new Uint8Array(fontCache);

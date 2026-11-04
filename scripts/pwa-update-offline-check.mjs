@@ -16,8 +16,15 @@ import { resolve } from "node:path";
 const PORT = Number(process.env.RR_PORT ?? 4179);
 const BASE = `http://localhost:${PORT}/`;
 const SW = resolve(process.cwd(), "dist/sw.js");
-const CURRENT = "rr-v1.1.1";
-const NEXT = "rr-v1.1.2";
+// Versions are read from the built worker instead of hardcoded, so the check
+// survives every release without edits. The simulated "previous install" is
+// derived by bumping the patch segment of the built version.
+const original = readFileSync(SW, "utf-8");
+const versionInBuild = (/const VERSION = "([^"]+)"/.exec(original) ?? [])[1];
+if (!versionInBuild) throw new Error(`no VERSION string found in ${SW}`);
+const CURRENT = versionInBuild; // the built version plays the "existing install"
+const bump = (v) => v.replace(/(\d+)$/, (n) => String(Number(n) + 1));
+const NEXT = bump(versionInBuild); // the simulated next release
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const server = spawn("pnpm", ["preview", "--port", String(PORT), "--strictPort"], {
@@ -25,7 +32,6 @@ const server = spawn("pnpm", ["preview", "--port", String(PORT), "--strictPort"]
   shell: true, // Windows: pnpm resolves to a .CMD shim that spawn() cannot exec directly
 });
 
-const original = readFileSync(SW, "utf-8");
 let failures = 0;
 const check = (name, ok, detail = "") => {
   console.log(`${ok ? "PASS" : "FAIL"} ${name}${detail ? " :: " + detail : ""}`);

@@ -21,7 +21,7 @@ const TARGET = process.env.TARGET === "local" ? "http://localhost:4173/" : "http
 const results = [];
 let failures = 0;
 const ok = (n, d) => results.push(`✓ ${n}: ${d}`);
-const bad = (n, d) => { results.push(`✗ ${n}: ${d}`); failures++; };
+const bad = (n, d) => { results.push(`✗ ${n}: ${d}`); failures++; console.log(`✗ ${n}: ${d}`); };
 const assertThat = (cond, n, d) => (cond ? ok(n, d) : bad(n, d));
 
 const browser = await chromium.launch();
@@ -98,15 +98,24 @@ await page.waitForTimeout(600);
   assertThat(content.includes("[5]"), "HTML report detail", "missing number [5] in report");
 }
 
-// PDF export online
+// PDF export online (first export fetches the ~10.6 MB CJK font — allow for a slow CDN)
 {
-  const [pdf] = await Promise.all([
-    page.waitForEvent("download", { timeout: 90000 }),
-    page.getByRole("button", { name: "导出 PDF 报告" }).click(),
-  ]);
-  await pdf.saveAs("_research/v102-online.pdf");
-  const buf = readFileSync("_research/v102-online.pdf");
-  assertThat(buf.subarray(0, 5).toString() === "%PDF-" && buf.length > 10_000, "PDF online", `${buf.length} bytes, %PDF magic`);
+  let pdf;
+  try {
+    const res = await Promise.all([
+      page.waitForEvent("download", { timeout: 180000 }),
+      page.getByRole("button", { name: "导出 PDF 报告" }).click(),
+    ]);
+    pdf = res[0];
+  } catch (e) {
+    const alert = await page.locator(".rr-alert").textContent().catch(() => "(no alert)");
+    bad("PDF online", `no download in 180s; alert=${String(alert).slice(0, 100)}; err=${String(e).slice(0, 80)}`);
+  }
+  if (pdf) {
+    await pdf.saveAs("_research/v102-online.pdf");
+    const buf = readFileSync("_research/v102-online.pdf");
+    assertThat(buf.subarray(0, 5).toString() === "%PDF-" && buf.length > 10_000, "PDF online", `${buf.length} bytes, %PDF magic`);
+  }
 }
 
 /* ---- negative canary: prove assertions fail when they should ---- */
@@ -137,13 +146,22 @@ await page.waitForSelector(".rr-wb", { timeout: 30000 });
   assertThat(cards.some((t) => t.includes("RR-CIT-001") && t.includes("[5]")), "OFFLINE C02 RR-CIT-001", "missing-ref rule asserted offline");
   assertThat(cards.some((t) => t.includes("RR-CIT-004")), "OFFLINE C02 RR-CIT-004", "order rule asserted offline");
   assertThat(cards.some((t) => t.includes("RR-REF-011")), "OFFLINE C02 RR-REF-011", "uncited info asserted offline");
-  const [pdfOffline] = await Promise.all([
-    page.waitForEvent("download", { timeout: 60000 }),
-    page.getByRole("button", { name: "导出 PDF 报告" }).click(),
-  ]);
-  await pdfOffline.saveAs("_research/v102-offline.pdf");
-  const buf = readFileSync("_research/v102-offline.pdf");
-  assertThat(buf.subarray(0, 5).toString() === "%PDF-" && buf.length > 10_000, "OFFLINE PDF export", `${buf.length} bytes`);
+  let pdfOffline;
+  try {
+    const res = await Promise.all([
+      page.waitForEvent("download", { timeout: 120000 }),
+      page.getByRole("button", { name: "导出 PDF 报告" }).click(),
+    ]);
+    pdfOffline = res[0];
+  } catch (e) {
+    const alert = await page.locator(".rr-alert").textContent().catch(() => "(no alert)");
+    bad("OFFLINE PDF export", `no download in 120s; alert=${String(alert).slice(0, 100)}; err=${String(e).slice(0, 80)}`);
+  }
+  if (pdfOffline) {
+    await pdfOffline.saveAs("_research/v102-offline.pdf");
+    const buf = readFileSync("_research/v102-offline.pdf");
+    assertThat(buf.subarray(0, 5).toString() === "%PDF-" && buf.length > 10_000, "OFFLINE PDF export", `${buf.length} bytes`);
+  }
 }
 
 // service worker active
