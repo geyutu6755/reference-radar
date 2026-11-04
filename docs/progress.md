@@ -88,3 +88,7 @@ Live status of the V1.0 development plan. Updated each iteration.
       derived fixtures (R-D1/R-D2) permanent in CI; 3 real documents recorded
 - [x] Issue grouping for long documents (verified on 1402-block standard)
 - [x] v1.1.0 released; release commit = deployed commit (93fbdd1)
+
+
+## V1.1.1 ✅ (2026-11-04) — external fixes accepted, released
+## V1.1.2 ✅ (2026-11-05) — reliability hardening, released

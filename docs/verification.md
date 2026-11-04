@@ -284,3 +284,41 @@ a partial part.
   is not asserted here — it must be green on the merge commit before any tag.
 - No real user feedback was collected: the public repository shows 1 star, 0
   forks and 0 issues, and all quality numbers above remain self-generated.
+
+
+## V1.1.1 takeover + V1.1.2 hardening (2026-11-04/05)
+
+### V1.1.1 takeover (external agent's fix branch)
+
+- Branch `fix/v1.1.1-false-positives` (7 commits on main) verified: working
+  tree clean, remote had no branch; all 7 commits preserved, none rewritten.
+- Independent acceptance: strict TS / ESLint / **239 Vitest** (incl.
+  `reachability.test.ts` — the real-pipeline rule gate — and `bounds.test.ts`
+  with lying-header archives) / build / 0-vuln audit / Playwright **14 passed,
+  4 skipped** (clipboard + offline emulation are Chromium-only) / PWA script
+  **10/10**.
+- Pushed, [PR #1](https://github.com/geyutu6755/reference-radar/pull/1) with
+  green CI, merged (merge commit 28dc365), tagged **v1.1.1**, released;
+  Pages deployed; live sw.js served rr-v1.1.1. v1.0.0–v1.1.0 untouched.
+
+### Production defect found during v1.1.1 live verification
+
+Offline PDF export failed on the live site ("Failed to fetch") while the same
+build passed locally. Root cause: the CJK font fetch had no fallback when the
+page is not controlled by a service worker (failed install under a flaky
+network). Fixed in v1.1.2 (below).
+
+### V1.1.2 hardening (PR #2, merged 848ec4f)
+
+- **P0 unbounded ranges**: span cap 50 / plausibility cap 999 / cumulative
+  budget 5000; [1-9999] → review with zero relations; [2001-2010]/[2019]
+  no longer misread; 150×[1-50] flood <5s (range-abuse.test.ts).
+- **Offline font fallback**: fetchFont → Cache API across all caches.
+- **Worker recovery**: correlation ids, 120s timeout, terminate + main-thread
+  retry (worker-client.ts rewritten).
+- **Graph accuracy**: duplicate-number entries all stay connected.
+- **PDF wrapping**: proven within printable width for hostile inputs
+  (report-pdf-wrap.test.ts; word-break spaces are the only consumed chars).
+- Gates: **249 Vitest**, Playwright 14/4, PWA script (versions now read from
+  the built sw.js), audit clean. Release v1.1.2 = HEAD = deployed build;
+  live sw.js serves rr-v1.1.2.
