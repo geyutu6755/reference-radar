@@ -114,6 +114,8 @@ export const messages = {
     "error.xmlTooLarge": "文档内容过大，超出解析限制。",
     "error.parseFailed": "解析失败：{message}",
     "error.generic": "发生错误：{message}",
+    "error.pdfModuleOffline":
+      "PDF 导出模块在当前离线页面中不可用（页面未被 Service Worker 接管或刷新过）。请联网后刷新页面重试，或改用 HTML 报告。",
     "footer.madeWith": "Reference Radar · 本地运行 · 不上传论文",
     "common.cancel": "取消",
     "common.close": "关闭",
@@ -230,6 +232,8 @@ export const messages = {
     "error.xmlTooLarge": "The document is too large to parse.",
     "error.parseFailed": "Parsing failed: {message}",
     "error.generic": "Something went wrong: {message}",
+    "error.pdfModuleOffline":
+      "The PDF module is unavailable on this offline page (not service-worker controlled, or the page was reloaded). Reconnect, reload and retry, or use the HTML report.",
     "footer.madeWith": "Reference Radar · Runs locally · Your paper never leaves the browser",
     "common.cancel": "Cancel",
     "common.close": "Close",

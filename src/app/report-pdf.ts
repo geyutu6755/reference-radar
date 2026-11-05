@@ -281,6 +281,12 @@ async function fetchFont(): Promise<Uint8Array> {
   return new Uint8Array(fontCache);
 }
 
+/** Shape of this module for consumers that preload it lazily. */
+export interface PdfModule {
+  buildPdfReport: typeof buildPdfReport;
+  exportPdfReport: typeof exportPdfReport;
+}
+
 export async function exportPdfReport(result: AnalysisResult, fileName: string, locale: Locale): Promise<void> {
   const bytes = await buildPdfReport(result, fileName, locale);
   const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });

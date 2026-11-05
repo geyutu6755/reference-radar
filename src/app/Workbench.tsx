@@ -1,12 +1,26 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApp } from "./AppContext";
 import type { AnalysisResult, Citation, Issue, ReferenceEntry, StandardVersion } from "../core/types";
 import DocumentPreview from "./DocumentPreview";
 import IssuesPanel from "./IssuesPanel";
 import ScopePanel from "./ScopePanel";
 import GraphView from "./GraphView";
+import type { PdfModule } from "./report-pdf";
 import { analyze } from "./worker-client";
 import { errorToKey } from "./use-analysis";
+
+/**
+ * PDF module is preloaded while the app is alive (idle, after analysis), so an
+ * offline export does not depend on a dynamic network fetch. If the preload
+ * fails (offline page without a service worker), the export button shows an
+ * actionable message instead of a raw fetch error.
+ */
+let pdfModule: PdfModule | undefined;
+async function loadPdfModule(): Promise<PdfModule> {
+  if (pdfModule) return pdfModule;
+  pdfModule = await import("./report-pdf");
+  return pdfModule;
+}
 import { downloadHtmlReport } from "./report-html";
 import { RadarLogo } from "./icons";
 
@@ -33,6 +47,26 @@ export default function Workbench({ result, fileName, sourceBytes, onHome, onRes
   const [pdfBusy, setPdfBusy] = useState(false);
   const [errorKey, setErrorKey] = useState<ReturnType<typeof errorToKey> | null>(null);
   const blockEls = useRef(new Map<number, HTMLElement>());
+
+  // Preload the PDF module while still alive (idle): makes offline export work
+  // in the same session and warms the font path in the background.
+  useEffect(() => {
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    const run = (): void => {
+      loadPdfModule().catch(() => {
+        /* offline without SW control — the export button will explain */
+        pdfModule = undefined;
+      });
+    };
+    const handle = w.requestIdleCallback ? w.requestIdleCallback(run, { timeout: 8000 }) : window.setTimeout(run, 1500);
+    return () => {
+      if (w.cancelIdleCallback) w.cancelIdleCallback(handle);
+      else window.clearTimeout(handle);
+    };
+  }, []);
   const flashTimer = useRef<number | undefined>(undefined);
 
   const scrollToBlock = useCallback((index: number) => {
@@ -174,10 +208,20 @@ export default function Workbench({ result, fileName, sourceBytes, onHome, onRes
               setPdfBusy(true);
               setErrorKey(null);
               try {
-                const m = await import("./report-pdf");
+                const m = await loadPdfModule();
                 await m.exportPdfReport(result, fileName, locale);
               } catch (e) {
-                setErrorKey({ key: "error.generic", params: { message: (e as Error).message } });
+                const msg = (e as Error).message ?? "";
+                const key = /import|fetch/i.test(msg) && /module|fetch/i.test(msg)
+                  ? "error.pdfModuleOffline"
+                  : "error.generic";
+                setErrorKey({
+                  key,
+                  params:
+                    key === "error.pdfModuleOffline"
+                      ? {}
+                      : { message: msg },
+                });
               } finally {
                 setPdfBusy(false);
               }
