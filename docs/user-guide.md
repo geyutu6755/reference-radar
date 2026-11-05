@@ -57,7 +57,15 @@ leaves the browser.
 
 ### 6. 离线使用（可选）
 
-浏览器菜单选择"安装应用"后，断网也能完成检查与导出。
+浏览器菜单选择"安装应用"后，断网也能完成检查与 **HTML 报告导出**。
+
+**离线 PDF 导出的前提**：PDF 所需的中文字体（约 10 MB）会在**联网状态下第一次
+导出 PDF 时**缓存。因此请先联网成功导出一次 PDF，之后断网才能继续导出 PDF。
+若在未缓存字体时离线导出，工具会明确提示（不会卡住），按提示联网导出一次即可。
+
+另外请注意：离线能力依赖已安装的 PWA（Service Worker 接管页面）。如果安装
+未完成或页面未被接管，刷新后离线将无法加载应用——这是既定边界，此时请恢复
+网络后刷新。
 
 ### 7. 常见问题
 
@@ -84,6 +92,19 @@ leaves the browser.
 5. **Graph & exports** — the graph tab shows citation↔reference links (red
    dashed = missing); export a standalone HTML report or a real PDF with
    selectable Chinese text (first export fetches the ~10 MB CJK font).
-6. **Offline** — install via the browser menu; everything keeps working offline.
+6. **Offline** — install via the browser menu; checking and HTML-report export
+   keep working offline. **Offline PDF** additionally requires exporting the PDF
+   once while online first (the ~10 MB CJK font is cached on that first export);
+   the tool states this clearly if you attempt an offline PDF before that. Full
+   offline capability requires the installed PWA (service-worker controlled page).
 
 Feedback: [open an issue](https://github.com/geyutu6755/reference-radar/issues/new/choose) — see `docs/feedback.md` for what to include.
+
+---
+
+## 分享给同学/同事
+
+如果你觉得有用，[`docs/promotion-materials.md`](promotion-materials.md) 里有
+可直接复制的文案（按角色分类）与截图索引。反馈请走
+[Issue 模板](https://github.com/geyutu6755/reference-radar/issues/new/choose)
+或 [试用公告 Discussion](https://github.com/geyutu6755/reference-radar/discussions/3)。

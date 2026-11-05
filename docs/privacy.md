@@ -24,6 +24,19 @@ third-party origin.
 
 Contact / disclosure: see [SECURITY.md](../SECURITY.md).
 
+## Public submissions are public
+
+Content posted in GitHub Issues and Discussions **is publicly visible by
+default**. Do not paste unpublished results, personal details, or anything you
+would not want indexed. Only fragments you deliberately post are used for
+testing; nothing from your local analysis session is ever collected by the app
+itself.
+
+**Regression-corpus consent:** a desanitized fragment becomes part of the
+public regression corpus **only after you explicitly agree** (the bug template
+asks). If you prefer private handling, say so in the issue and the maintainers
+will keep the fragment out of public test material.
+
 ## Public beta submissions
 
 Users who report issues are asked to submit **desanitized fragments only**

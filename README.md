@@ -52,10 +52,15 @@ Rules are versioned per standard edition and every rule carries a source clause 
   **mechanical fix previews** (before/after + one-click copy) for unambiguous
   normalizations like page separators and date formats — nothing is invented.
 - **GB/T 7714—2015** (superseded) — same structural rules with 2015 clause numbering; 2025-only codes are flagged as undefined in this edition.
-- **Independent validation:** an external 20-document corpus (separate
-  generator, hand annotations) measures marker precision/recall and issue
-  false positives — currently 1.000/1.000 with zero FPs; see
-  [`docs/external-validation.md`](docs/external-validation.md).
+- **Independent validation:** a 20-document corpus of **synthetic DOCX
+  samples** (built by a separate generator from constructed scenarios, with
+  hand annotations) measures marker precision/recall and issue false positives
+  — currently 1.000/1.000 with zero FPs on these samples; see
+  [`docs/external-validation.md`](docs/external-validation.md). This is a
+  constructed-scenario result, **not** measured accuracy on natural papers.
+  Real-document validation so far covers **3 real documents** (two university
+  templates + the standard text); see
+  [`docs/real-docx-validation.md`](docs/real-docx-validation.md).
 - Explicitly **not** implemented: the author–year (著者-出版年制) style, field
   completeness for the remaining 2025 entry types (会议录/报告/档案/地图 等), and
   full-standard compliance certification. Elements the standard marks 有则必备

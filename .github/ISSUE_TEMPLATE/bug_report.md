@@ -20,7 +20,14 @@ dispute) / 正确的分析结果是什么；若是规则争议请引用条款。
 If possible, attach a minimal .docx that reproduces the issue (remove any
 private content first). / 如可能请附上最小复现的 .docx（先删除隐私内容）。
 
+**Regression-corpus consent / 回归语料授权**
+If your desanitized fragment reproduces the bug, may we add it to the public
+test corpus (with attribution)? / 若你的脱敏片段可复现问题，是否同意将其
+（注明来源）纳入公开测试语料？ Yes / 是 → No / 否 →
+
 **Environment / 环境**
 - Browser and version:
 - OS:
+- Standard version selected / 选择的标准版本: GB/T 7714—2015 / 2025
+- Reference types involved / 涉及的文献类型: [J] [M] [D] [EB/OL] 其他
 - Are you using the demo site or a local build:
