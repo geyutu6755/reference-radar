@@ -322,3 +322,33 @@ network). Fixed in v1.1.2 (below).
 - Gates: **249 Vitest**, Playwright 14/4, PWA script (versions now read from
   the built sw.js), audit clean. Release v1.1.2 = HEAD = deployed build;
   live sw.js serves rr-v1.1.2.
+
+
+## V1.1.2 production acceptance + public beta round 1 (2026-11-05/06)
+
+### Production offline-PDF acceptance (docs/offline-pdf-acceptance.md)
+
+- 3 independent rounds × 4 scenarios against the LIVE site (rr-v1.1.2):
+  - **A installed-PWA offline flow: 3/3 PASS** — DOCX import, analysis, PDF
+    export offline; PDFs verified via pypdf (Chinese title/stats/refs/clauses,
+    1 page, ~85 KB)
+  - **B1 Cache-API font fallback data source: 3/3 VERIFIED** on production
+    (caches.match(font) → 200, 11 179 892 bytes)
+  - **B2 uncontrolled page after reload**: documented limitation (no shell to
+    load offline); C first-visit-offline: fails as documented, no hang;
+    D recovery: 3/3 ok
+- A residual gap found and fixed during verification: the dynamic import of
+  the PDF module itself could fail on an uncontrolled offline page → the
+  module is now **preloaded on idle** after mount and the failure mode shows
+  an actionable message (commit 2fc9cec).
+- One live round exercised the font-missing error path: clear Chinese guidance,
+  no hang — error path verified.
+- github.io network flakiness was observed and is distinguished from product
+  behavior throughout the log (retry evidence recorded).
+
+### Public beta round 1
+
+- Announcement: [Discussion #3](https://github.com/geyutu6755/reference-radar/discussions/3)
+- Metrics ledger: docs/beta-metrics.md (**participants: 0 as of 2026-11-06 —
+  announced, awaiting voluntary uptake**)
+- No usage/accuracy claims made beyond recorded evidence.
