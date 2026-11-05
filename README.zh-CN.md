@@ -102,6 +102,8 @@ DOCX 字节 → 安全解包（fflate + 炸弹/路径防护）
 
 ## 反馈与公开测试
 
+**公开试用第 1 轮进行中**：[前往试用公告](https://github.com/geyutu6755/reference-radar/discussions/3)——本科生/研究生/编辑三类 5 分钟任务，反馈逐条公开回应。
+
 欢迎用自己的论文试一试，告诉我们哪里出错：[选择模板提交
 Issue](https://github.com/geyutu6755/reference-radar/issues/new/choose)——
 反馈计划见 [`docs/feedback.md`](docs/feedback.md)，三分钟上手教程见

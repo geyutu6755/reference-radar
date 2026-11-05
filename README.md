@@ -124,6 +124,8 @@ Planned versions — nothing on this list is shipped yet; see
 
 ## Feedback & public beta
 
+**Public beta round 1 is live** — [join the announcement](https://github.com/geyutu6755/reference-radar/discussions/3) with 5-minute trial tasks for students, grad students and editors.
+
 Try it on your own paper and tell us what breaks: [open an issue with the
 matching template](https://github.com/geyutu6755/reference-radar/issues/new/choose)
 — see [`docs/feedback.md`](docs/feedback.md) for the beta feedback plan and
