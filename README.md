@@ -129,7 +129,7 @@ Planned versions — nothing on this list is shipped yet; see
 
 ## Feedback & public beta
 
-**Public beta round 1 is live** — [join the announcement](https://github.com/geyutu6755/reference-radar/discussions/3) with 5-minute trial tasks for students, grad students and editors.
+**Public beta round 1 is live** — [join the announcement](https://github.com/geyutu6755/reference-radar/discussions/3) with 5-minute trial tasks for students, grad students and editors. Ready-to-post outreach copy lives in [`docs/promotion-outreach.md`](docs/promotion-outreach.md).
 
 Try it on your own paper and tell us what breaks: [open an issue with the
 matching template](https://github.com/geyutu6755/reference-radar/issues/new/choose)
