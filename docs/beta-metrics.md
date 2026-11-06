@@ -5,9 +5,12 @@
 
 ## 参与情况
 
+**计入规则**：仅统计 GitHub 账号与项目作者（geyutu6755）不同的真实外部志愿者；
+公告浏览量、点赞/表情、作者本人测试均不计入。
+
 | 指标 | 数值 | 依据 |
 |---|---|---|
-| 公告发布 | 2026-11-06 | [Discussion #1](https://github.com/geyutu6755/reference-radar/discussions/3) |
+| 公告发布 | 2026-11-06（UTC） | [Discussion #3](https://github.com/geyutu6755/reference-radar/discussions/3) |
 | 自愿参与者 | **0**（公告刚发布） | — |
 | 有效反馈数 | **0** | — |
 

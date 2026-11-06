@@ -37,11 +37,21 @@ public regression corpus **only after you explicitly agree** (the bug template
 asks). If you prefer private handling, say so in the issue and the maintainers
 will keep the fragment out of public test material.
 
-## Public beta submissions
+## Public submissions, investigation use, and corpus redistribution are three distinct things
 
-Users who report issues are asked to submit **desanitized fragments only**
-(reference-list excerpts, offending paragraphs) — never full papers. Fragments
-posted in a public issue are treated as test material licensed for regression
-use; whole test files shared privately stay local to the maintainers' machines
-and are never committed or redistributed. The application itself continues to
-upload nothing (see sections above).
+1. **Visibility.** Content posted in GitHub Issues and Discussions is
+   **publicly visible by default**. Do not paste unpublished results, personal
+   details, or anything you would not want indexed.
+2. **Investigation use.** Maintainers may view and work with the fragments you
+   post while investigating the issue you filed. Submitting a fragment does
+   not require you to grant any broader license.
+3. **Regression-corpus redistribution.** A desanitized fragment is added to
+   the **public** regression corpus **only after you explicitly agree**
+   (the bug template asks for Yes/No). **Declining consent never affects your
+   access to investigation, answers, or technical support.** Privately shared
+   full documents stay local to the maintainers' machines and never enter the
+   public repository, releases, or the public corpus.
+4. **No full papers.** We never collect or ask for complete private papers —
+   only desanitized fragments you choose to post.
+
+The application itself continues to upload nothing (see sections above).
