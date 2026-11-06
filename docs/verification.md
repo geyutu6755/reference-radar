@@ -352,3 +352,25 @@ network). Fixed in v1.1.2 (below).
 - Metrics ledger: docs/beta-metrics.md (**participants: 0 as of 2026-11-06 —
   announced, awaiting voluntary uptake**)
 - No usage/accuracy claims made beyond recorded evidence.
+
+
+## Public-info consistency review (base 5103a4e, 2026-11-06)
+
+- Discussion #3 body corrected via GraphQL to the user-approved sentence
+  (3 real documents = two university templates + one standard text; no
+  measured accuracy on natural papers; corpus inclusion requires explicit
+  consent). Verified by read-after-write on TWO independent channels
+  (GraphQL + REST) — the stale wording is confirmed absent from the current
+  body. Note: the GitHub discussion revision history still shows the earlier
+  wording, which is GitHub-side and immutable from the API.
+- privacy.md tail rewritten: three distinct behaviors (public visibility /
+  investigation use / corpus redistribution), removing the "licensed for
+  regression use" contradiction; declining consent never affects support.
+- feedback.md: implied-consent wording replaced with explicit-consent.
+- beta-metrics.md: link label fixed to Discussion #3, dates marked UTC,
+  participant-counting rule added (author excluded; views/stars not counted).
+- bug template: regression-corpus Yes/No consent + standard-version and
+  reference-type fields.
+- README (en/zh): 20-sample corpus explicitly SYNTHETIC; real-document scale
+  stated as 3 documents; cross-file consistency machine-checked (all PASS).
+- CI + Pages green on 3f55038; live site 200.
