@@ -29,6 +29,7 @@ function SwBanner(): React.ReactNode {
 export default function App(): React.ReactNode {
   const [session, setSession] = useState<{
     result: AnalysisResult;
+    previousResult?: AnalysisResult;
     fileName: string;
     bytes?: Uint8Array;
   } | null>(null);
@@ -44,8 +45,15 @@ export default function App(): React.ReactNode {
           result={session.result}
           fileName={session.fileName}
           sourceBytes={session.bytes}
+          previousResult={session.previousResult}
           onHome={() => setSession(null)}
-          onResult={(result, fileName) => setSession((s) => ({ ...s!, result, fileName }))}
+          onResult={(result, fileName) =>
+            setSession((s) =>
+              s && s.fileName === fileName
+                ? { ...s, previousResult: s.result, result, fileName }
+                : { result, fileName, bytes: s?.bytes }
+            )
+          }
         />
       )}
     </AppProvider>

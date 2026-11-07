@@ -820,3 +820,34 @@ body {
 .rr-group > .rr-issue:last-child {
   border-bottom: none;
 }
+
+/* run comparison */
+.rr-compare {
+  border: 1px solid var(--rr-border);
+  border-radius: var(--rr-radius-m);
+  margin-bottom: var(--rr-space-3);
+  background: var(--rr-primary-soft);
+}
+.rr-compare__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+.rr-compare__title { font-weight: 700; }
+.rr-compare__counts { color: var(--rr-text-muted); flex: 1; }
+.rr-compare__toggle { color: var(--rr-text-muted); }
+.rr-compare__body { padding: 4px 12px 10px; display: flex; flex-direction: column; gap: 8px; }
+.rr-compare__section { font-size: 12.5px; display: flex; flex-direction: column; gap: 2px; }
+.rr-compare__line { color: var(--rr-text-muted); overflow-wrap: anywhere; }
+.rr-compare__resolved { color: var(--rr-ok); }
+.rr-compare__introduced { color: var(--rr-danger); }
+.rr-compare__persistent { color: var(--rr-text-muted); }
+.rr-compare__note { font-size: 11px; color: var(--rr-text-muted); border-top: 1px dashed var(--rr-border); padding-top: 6px; }

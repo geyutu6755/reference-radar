@@ -6,6 +6,8 @@ import IssuesPanel from "./IssuesPanel";
 import ScopePanel from "./ScopePanel";
 import GraphView from "./GraphView";
 import type { PdfModule } from "./report-pdf";
+import { compareRuns } from "../core/compare";
+import ComparisonCard from "./ComparisonCard";
 import { analyze } from "./worker-client";
 import { errorToKey } from "./use-analysis";
 
@@ -29,13 +31,15 @@ interface WorkbenchProps {
   fileName: string;
   /** Original DOCX bytes (kept in memory only, never persisted) for re-analysis. */
   sourceBytes?: Uint8Array;
+  /** Previous analysis, when this result is a re-check of the same file. */
+  previousResult?: AnalysisResult;
   onHome: () => void;
   onResult: (r: AnalysisResult, fileName: string) => void;
 }
 
 type RightTab = "issues" | "graph" | "scope";
 
-export default function Workbench({ result, fileName, sourceBytes, onHome, onResult }: WorkbenchProps): React.ReactNode {
+export default function Workbench({ result, fileName, sourceBytes, previousResult, onHome, onResult }: WorkbenchProps): React.ReactNode {
   const { tr, locale, setLocale, theme, toggleTheme } = useApp();
   const [tab, setTab] = useState<RightTab>("issues");
   const [filter, setFilter] = useState<Issue["severity"] | "all">("all");
@@ -120,6 +124,11 @@ export default function Workbench({ result, fileName, sourceBytes, onHome, onRes
       setErrorKey({ key: "error.generic", params: { message: (e as Error).message } });
     }
   }, [result, fileName, locale]);
+
+  const comparison = useMemo(
+    () => (previousResult ? compareRuns(previousResult, result) : null),
+    [previousResult, result]
+  );
 
   const headingBlocks = useMemo(
     () => result.blocks.filter((b) => b.kind === "heading" && b.headingLevel !== undefined && b.headingLevel <= 3),
@@ -289,6 +298,9 @@ export default function Workbench({ result, fileName, sourceBytes, onHome, onRes
               </button>
             ))}
           </div>
+          {tab === "issues" && comparison && (
+            <ComparisonCard comparison={comparison} />
+          )}
           {tab === "issues" && (
             <IssuesPanel
               result={result}
