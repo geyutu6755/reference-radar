@@ -47,8 +47,9 @@ describe("golden samples (hand-authored expectations)", () => {
 });
 
 describe("hostile inputs (must fail safely with actionable codes)", () => {
-  for (const s of HOSTILE_SAMPLES) {
-    it(`${s.id} ${s.title}`, () => {
+  // These tests deliberately inflate large payloads to prove the caps reject
+  // them — under a loaded machine the 64 MB inflate can exceed the 5 s default.
+  it.each(HOSTILE_SAMPLES)("$id $title", (s) => {
       if (s.throwsCode) {
         expect(() => analyzeDocx(s.bytes(), `${s.id}.docx`, { version: "2025" })).toThrowError(
           expect.objectContaining({ code: s.throwsCode }) as Error
@@ -57,8 +58,7 @@ describe("hostile inputs (must fail safely with actionable codes)", () => {
         // G18e: malformed XML throws a generic, readable Error (not a crash).
         expect(() => analyzeDocx(s.bytes(), `${s.id}.docx`, { version: "2025" })).toThrowError(/document\.xml/);
       }
-    });
-  }
+    }, 60000);
 
   it("DocxLimitsError carries a user-facing code", () => {
     const e = new DocxLimitsError("zip-bomb", "test");

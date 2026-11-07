@@ -313,6 +313,12 @@ export interface RuleDefinition {
 }
 
 export interface AnalysisScope {
+  /**
+   * True when the analysis has no usable in-text citations (e.g. a pasted
+   * reference list without body text). Uncited-entry and citation-order
+   * checks that require body context are suppressed in this mode.
+   */
+  bodyless?: boolean;
   /** Which containers were actually analyzed. */
   analyzedContainers: ContainerKind[];
   /** Explicit statements about what was NOT analyzed. */

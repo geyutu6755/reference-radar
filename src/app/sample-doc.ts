@@ -60,3 +60,36 @@ export function buildSampleDocx(): Uint8Array {
 }
 
 export const SAMPLE_FILE_NAME = "示例论文-引文分析研究.docx";
+
+/** Sample B: typical citation errors — missing reference, duplicate number, order violation. */
+export function buildErrorSampleDocx(): Uint8Array {
+  const doc: TestDoc = {
+    paragraphs: [
+      { text: "示例论文（含典型引文错误）", heading: 1 },
+      { text: "本示例包含典型错误：正文引用了未列出的文献[3]，先引用[2]后引用[1]，且编号[2]重复著录。" },
+      { text: "研究基础见文献[1]。" },
+      { text: "参考文献", heading: 1 },
+      { text: "[1] 王明远. 深度学习在文献计量分析中的应用研究[J]. 情报学报, 2021, 40(3): 245-256." },
+      { text: "[2] 陈红. 基于引文网络的学术影响力评价方法[M]. 北京: 科学出版社, 2020: 88-102." },
+      { text: "[2] 陈红. 基于引文网络的学术影响力评价方法[M]. 北京: 科学出版社, 2020: 88-102." },
+    ],
+  };
+  return buildDocx(doc);
+}
+
+/** Sample C: fixable format issues — page separator, cited-date format (exercises fix preview). */
+export function buildFormatSampleDocx(): Uint8Array {
+  const doc: TestDoc = {
+    paragraphs: [
+      { text: "示例论文（含可自动规范化的格式问题）", heading: 1 },
+      { text: "本示例的页码使用了全角波浪线，在线文献的引用日期格式不规范，均可一键预览修正[1][2]。" },
+      { text: "参考文献", heading: 1 },
+      { text: "[1] 刘晓峰. 某项方法研究[J]. 某学报, 2021, 15(2): 245～256." },
+      { text: "[2] Johnson K. Open access and scholarly communication[EB/OL]. (2023-05-12)[2024.10.01]. https://example.org/open-access." },
+    ],
+  };
+  return buildDocx(doc);
+}
+
+export const SAMPLE_ERROR_FILE_NAME = "示例论文-含典型引文错误.docx";
+export const SAMPLE_FORMAT_FILE_NAME = "示例论文-含可规范格式问题.docx";

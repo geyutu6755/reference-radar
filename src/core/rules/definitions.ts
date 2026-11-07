@@ -1292,6 +1292,9 @@ export const RULES: RuleDefinition[] = [
     explanation: "列出了但从未被正文引用的文献。这是提示信息；是否删除取决于论文写作要求。",
     check: (ctx) => {
       if (!ctx.scope.referenceSectionDetected) return [];
+      // Reference-list-only input (paste mode without body text): "uncited"
+      // cannot be judged — suppress instead of flagging every entry (V1.1.2).
+      if (ctx.scope.bodyless) return [];
       const cited = new Set(ctx.relations.map((rel) => rel.number));
       const drafts: IssueDraft[] = [];
       for (const r of ctx.references) {

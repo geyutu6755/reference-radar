@@ -1,0 +1,21 @@
+diff --git a/dist/chunks/index.1TqnEahn.js b/dist/chunks/index.1TqnEahn.js
+--- a/dist/chunks/index.1TqnEahn.js
++++ b/dist/chunks/index.1TqnEahn.js
+@@ -5140,7 +5140,7 @@
+ 	RunnerState["STOPPED"] = "stopped";
+ 	return RunnerState;
+ }(RunnerState || {});
+-const START_TIMEOUT = 6e4;
++const START_TIMEOUT = 18e4;
+ const STOP_TIMEOUT = 6e4;
+ /** @experimental */
+ class PoolRunner {
+@@ -5844,7 +5844,7 @@
+ 	}
+ }
+ 
+-const WORKER_START_TIMEOUT = 9e4;
++const WORKER_START_TIMEOUT = 3e5;
+ class Pool {
+ 	options;
+ 	logger;

@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useApp } from "./AppContext";
 import { useAnalysisRunner } from "./use-analysis";
-import { buildSampleDocx, SAMPLE_FILE_NAME } from "./sample-doc";
+import { buildSampleDocx, buildErrorSampleDocx, buildFormatSampleDocx, SAMPLE_FILE_NAME, SAMPLE_ERROR_FILE_NAME, SAMPLE_FORMAT_FILE_NAME } from "./sample-doc";
 import type { AnalysisResult } from "../core/types";
 import { GithubIcon, RadarLogo, ShieldIcon } from "./icons";
 
@@ -146,6 +146,26 @@ export default function Home({ onResult }: HomeProps): React.ReactNode {
         <div className="rr-alt-actions">
           <button className="rr-btn" onClick={sample} disabled={running}>
             {tr("home.trySample")}
+          </button>
+          <button
+            className="rr-btn"
+            onClick={() => {
+              setError(null);
+              void finish({ kind: "docx", bytes: buildErrorSampleDocx(), fileName: SAMPLE_ERROR_FILE_NAME, version });
+            }}
+            disabled={running}
+          >
+            体验含错误示例
+          </button>
+          <button
+            className="rr-btn"
+            onClick={() => {
+              setError(null);
+              void finish({ kind: "docx", bytes: buildFormatSampleDocx(), fileName: SAMPLE_FORMAT_FILE_NAME, version });
+            }}
+            disabled={running}
+          >
+            体验格式修正示例
           </button>
           <button className="rr-btn" onClick={() => setPasteOpen((v) => !v)} disabled={running} aria-expanded={pasteOpen}>
             {tr("home.paste")}

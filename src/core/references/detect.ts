@@ -77,6 +77,11 @@ export function detectReferenceSection(blocks: DocBlock[]): ReferenceSection | u
       runLen = 0;
     }
   }
+  // A suffix run of >=2 entries at the very end of the input is accepted in
+  // paste mode, where users legitimately paste short lists.
+  if (runLen >= 2 && runStart >= 0 && runStart + runLen === blocks.length) {
+    return { startIndex: runStart, endIndex: regionEnd(blocks, runStart - 1), evidence: "entries-run" };
+  }
   if (runLen >= 3 && runStart >= 0) {
     return { startIndex: runStart, endIndex: regionEnd(blocks, runStart - 1), evidence: "entries-run" };
   }

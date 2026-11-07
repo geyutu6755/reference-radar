@@ -15,7 +15,11 @@ export function analyzeText(text: string, fileName: string, options: { version: 
   for (const [i, line] of lines.entries()) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    const isHeading = /^(第[一二三四五六七八九十\d]+[章节部分]|[一二三四五六七八九十][、.]|\d+(\.\d+)*\s+\S)/.test(trimmed) && trimmed.length < 40;
+    const isHeading =
+      (/^(第[一二三四五六七八九十\d]+[章节部分]|[一二三四五六七八九十][、.]|\d+(\.\d+)*\s+\S)/.test(trimmed) && trimmed.length < 40) ||
+      // Standalone reference-section titles are structural headings even when
+      // they don't match the numbered-heading shapes above.
+      /^(参\s*考\s*文\s*献[:：]?|references?[:：]?|bibliography[:：]?)$/i.test(trimmed);
     blocks.push({
       id: `text:p${i}`,
       kind: isHeading ? "heading" : "paragraph",
@@ -39,10 +43,20 @@ export function analyzeText(text: string, fileName: string, options: { version: 
   }
   const relations = buildRelations(citations, references);
 
+  // Paste mode with a reference list but no in-text citations: body-dependent
+  // conclusions (uncited entries, citation order) must not be reported.
+  const bodyless = citations.length === 0;
   const scope: AnalysisScope = {
+    bodyless,
     analyzedContainers: ["body"] as ContainerKind[],
     excludedNotes: [
       "粘贴文本模式：无脚注、尾注、表格或域信息可分析。/ Pasted-text mode: no footnotes, tables or field data available.",
+      ...(bodyless
+        ? [
+            "未检测到正文引文标记：『未被正文引用』与『引用顺序』类检查已停用（仅参考文献列表模式下无法可靠判断）。/ " +
+              "No in-text citation markers detected: uncited-entry and citation-order checks are disabled in reference-list-only mode.",
+          ]
+        : []),
     ],
     referenceSectionDetected: !!section,
     referenceSectionTitle: section?.title,
