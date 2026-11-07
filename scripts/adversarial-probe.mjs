@@ -106,8 +106,10 @@ const fixDoc = docx(
 await upload("recheck.docx", errDoc);
 const beforeCards = (await page.locator(".rr-issue").allTextContents()).length;
 await page.getByRole("button", { name: "返回首页" }).click();
-await page.waitForTimeout(400);
-await upload("recheck.docx", fixDoc);
+await page.waitForTimeout(600);
+// Stay in the SPA — page.goto() would wipe lastCheck (full reload).
+await page.setInputFiles('input[type="file"]', { name: "recheck.docx", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", buffer: Buffer.from(fixDoc) });
+await page.waitForSelector(".rr-wb", { timeout: 30000 });
 // comparison card should appear (same fileName triggers comparison in App)
 {
   const compare = await page.locator(".rr-compare").count();
