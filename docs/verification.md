@@ -374,3 +374,27 @@ network). Fixed in v1.1.2 (below).
 - README (en/zh): 20-sample corpus explicitly SYNTHETIC; real-document scale
   stated as 3 documents; cross-file consistency machine-checked (all PASS).
 - CI + Pages green on 3f55038; live site 200.
+
+
+## V1.2.0 final release verification (2026-11-08)
+
+### Release chain
+
+- PR #4 (release/v1.2.0-final → main): CI green on a0d6dab (Typecheck·Lint·
+  Unit·Build + E2E 3 browsers)
+- Merge commit f340743 = deployed Pages build = v1.2.0 release target
+- Live sw.js serves rr-v1.2.0; live site 200
+- Full live-site functional test: ALL PASS (clean-sample gate, exact rule
+  assertions, clause basis, locate flash, graph, HTML+PDF content, offline
+  import/analysis/PDF, negative canary) — scripts/live-test.mjs
+
+### Final gate numbers (release branch, this machine)
+
+- AMD Ryzen 9 7945HX, 16 GB RAM, Windows 10, Node 24.19.0, Chrome via Playwright
+- TypeScript strict: clean. ESLint: clean. Build: ok. Audit: 0 vulns.
+- Vitest: **262 passed / 0 failed / 0 skipped** across 17 files
+  (adds 5 paste-mode regressions, 4 comparison tests, 3 sample-profile tests)
+- Playwright: 14 passed / 4 skipped (Chromium-only clipboard & offline emulation)
+- PWA install/update/offline: 10/10 PASS
+- Promotion material clause reference corrected (9.2.1/9.2.2, not 表4)
+- Doc-link check: none broken
