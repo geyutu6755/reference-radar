@@ -33,12 +33,25 @@ export default function App(): React.ReactNode {
     fileName: string;
     bytes?: Uint8Array;
   } | null>(null);
+  // Survives going home so a user can re-upload a fixed version and still see
+  // the comparison. Cleared when a DIFFERENT file is analyzed.
+  const [lastCheck, setLastCheck] = useState<{
+    result: AnalysisResult;
+    fileName: string;
+  } | null>(null);
 
   return (
     <AppProvider>
       <SwBanner />
       {session === null ? (
-        <Home onResult={(result, fileName, bytes) => setSession({ result, fileName, bytes })} />
+        <Home
+          onResult={(result, fileName, bytes) => {
+            const prev =
+              lastCheck && lastCheck.fileName === fileName ? lastCheck.result : undefined;
+            setLastCheck({ result, fileName });
+            setSession({ result, previousResult: prev, fileName, bytes });
+          }}
+        />
       ) : (
         <Workbench
           key={`${session.fileName}-${session.result.analyzedAt}`}
@@ -48,11 +61,12 @@ export default function App(): React.ReactNode {
           previousResult={session.previousResult}
           onHome={() => setSession(null)}
           onResult={(result, fileName) =>
-            setSession((s) =>
-              s && s.fileName === fileName
-                ? { ...s, previousResult: s.result, result, fileName }
-                : { result, fileName, bytes: s?.bytes }
-            )
+            setSession((s) => ({
+              ...s!,
+              result,
+              fileName,
+              previousResult: s?.fileName === fileName ? s.result : undefined,
+            }))
           }
         />
       )}
