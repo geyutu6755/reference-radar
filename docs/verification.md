@@ -398,3 +398,37 @@ network). Fixed in v1.1.2 (below).
 - PWA install/update/offline: 10/10 PASS
 - Promotion material clause reference corrected (9.2.1/9.2.2, not 表4)
 - Doc-link check: none broken
+
+
+## Independent re-audit (2026-11-08, post-v1.2.0)
+
+### Adversarial probe on production (`scripts/adversarial-probe.mjs`)
+
+All 10 checks PASS on the live site (rr-v1.2.0):
+- paste-mode bodyless suppression verified (uncited suppressed, gap reported,
+  scope discloses disabled checks)
+- bounded range [1-9999]: graph has 3 nodes (no flood), review present with
+  `range-too-long:1-9999`, zero RR-CIT-001 flood
+- duplicate number [2]→A/[2]→B: 2 graph edges, both entries connected
+- re-check comparison card appears after going home + re-uploading the SAME
+  fileName with fixed content; shows 已消失 3 · 新出现 0 · 仍然存在 0
+- empty DOCX renders gracefully; consecutive HTML exports work
+
+### Real defect found & fixed
+
+**Re-check comparison lost after going home**: `setSession(null)` on home
+wiped the previous result, so a user who fixes their paper and re-uploads
+never saw the comparison. Fixed: `lastCheck` state survives home navigation;
+comparison activates only for the same fileName. Regression verified on
+production (commit 3385ddf).
+
+### E2E parallelism note
+
+The full 3-browser E2E suite fails under local resource starvation (CPU 74–81%,
+3.5 GB free). With `--workers=2`, all 14 pass. CI runners are unaffected.
+Recorded in testing.md as an environment constraint.
+
+### Final gate numbers
+
+- TypeScript strict: clean. ESLint: clean. Vitest: 262 passed. Build: ok.
+- Audit: 0 vulns. Live site: 200, sw.js = rr-v1.2.0.
