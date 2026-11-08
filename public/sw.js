@@ -6,7 +6,7 @@
  * - Never caches user documents or analysis results — everything the user
  *   uploads stays in memory only.
  */
-const VERSION = "rr-v1.2.0";
+const VERSION = "rr-v1.2.1";
 const PRECACHE = `${VERSION}-precache`;
 const RUNTIME = `${VERSION}-runtime`;
 
