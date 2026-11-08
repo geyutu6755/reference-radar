@@ -432,3 +432,13 @@ Recorded in testing.md as an environment constraint.
 
 - TypeScript strict: clean. ESLint: clean. Vitest: 262 passed. Build: ok.
 - Audit: 0 vulns. Live site: 200, sw.js = rr-v1.2.0.
+
+
+## v1.2.1 final patch release (2026-11-08)
+
+- Release target: 9e1861f = deployed Pages build; live sw.js serves rr-v1.2.1
+- 262 Vitest tests, Playwright 14 passed/4 skipped, PWA 10/10, audit 0 vulns
+- Live-site functional test: ALL 25 checks PASS (rr-v1.2.1)
+- Scope: production comparison fix (de2852c/3385ddf) + docs; no app code
+  changes beyond App.tsx lastCheck persistence
+- Earlier releases v1.0.0–v1.2.0 all preserved
